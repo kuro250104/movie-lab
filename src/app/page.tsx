@@ -46,7 +46,7 @@ export default function Home() {
       >
        
         <div className="absolute inset-0 bg-black/70" />
-        <div className="relative container px-4">
+        <div className="relative  px-4">
           <h2 className="mb-12 text-3xl font-bold">Nos expertises</h2>
           <ExpertiseCarousel />
         </div>
