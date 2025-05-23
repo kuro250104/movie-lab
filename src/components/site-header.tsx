@@ -30,7 +30,7 @@ export function SiteHeader() {
           <Link href="/about" className="text-lg font-bold uppercase hover:text-blue-400">
             A propos
           </Link>
-          <Link href="#" className="text-lg font-bold uppercase hover:text-blue-400">
+          <Link href="/contact" className="text-lg font-bold uppercase hover:text-blue-400">
             Contact
           </Link>
         </nav>
