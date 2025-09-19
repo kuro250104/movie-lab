@@ -3,7 +3,7 @@ import {useEffect, useState} from "react"
 import {useRouter} from "next/navigation"
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
-import {Users, Calendar, Euro, TrendingUp, Clock, UserPlus, CalendarPlus, LogOut} from "lucide-react"
+import {Users, Calendar, Euro, TrendingUp, Clock, UserPlus, CalendarPlus, LogOut, PackagePlus} from "lucide-react"
 import Link from "next/link"
 
 interface DashboardStats {
@@ -29,7 +29,6 @@ export default function AdminDashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            // Simuler des données pour l'instant
             setStats({
                 totalClients: 45,
                 totalAppointments: 128,
@@ -84,51 +83,51 @@ export default function AdminDashboard() {
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">Total Clients</CardTitle>
-                            <Users className="h-4 w-4 text-orange-600"/>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">{stats.totalClients}</div>
-                            <p className="text-xs text-green-600 mt-1">+12% ce mois</p>
-                        </CardContent>
-                    </Card>
+                {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">*/}
+                {/*    <Card>*/}
+                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
+                {/*            <CardTitle className="text-sm font-medium text-gray-600">Total Clients</CardTitle>*/}
+                {/*            <Users className="h-4 w-4 text-orange-600"/>*/}
+                {/*        </CardHeader>*/}
+                {/*        <CardContent>*/}
+                {/*            <div className="text-2xl font-bold text-gray-900">{stats.totalClients}</div>*/}
+                {/*            <p className="text-xs text-green-600 mt-1">+12% ce mois</p>*/}
+                {/*        </CardContent>*/}
+                {/*    </Card>*/}
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">RDV Total</CardTitle>
-                            <Calendar className="h-4 w-4 text-orange-600"/>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">{stats.totalAppointments}</div>
-                            <p className="text-xs text-green-600 mt-1">+8% ce mois</p>
-                        </CardContent>
-                    </Card>
+                {/*    <Card>*/}
+                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
+                {/*            <CardTitle className="text-sm font-medium text-gray-600">RDV Total</CardTitle>*/}
+                {/*            <Calendar className="h-4 w-4 text-orange-600"/>*/}
+                {/*        </CardHeader>*/}
+                {/*        <CardContent>*/}
+                {/*            <div className="text-2xl font-bold text-gray-900">{stats.totalAppointments}</div>*/}
+                {/*            <p className="text-xs text-green-600 mt-1">+8% ce mois</p>*/}
+                {/*        </CardContent>*/}
+                {/*    </Card>*/}
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">CA Mensuel</CardTitle>
-                            <Euro className="h-4 w-4 text-orange-600"/>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">{stats.monthlyRevenue}€</div>
-                            <p className="text-xs text-green-600 mt-1">+15% ce mois</p>
-                        </CardContent>
-                    </Card>
+                {/*    <Card>*/}
+                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
+                {/*            <CardTitle className="text-sm font-medium text-gray-600">CA Mensuel</CardTitle>*/}
+                {/*            <Euro className="h-4 w-4 text-orange-600"/>*/}
+                {/*        </CardHeader>*/}
+                {/*        <CardContent>*/}
+                {/*            <div className="text-2xl font-bold text-gray-900">{stats.monthlyRevenue}€</div>*/}
+                {/*            <p className="text-xs text-green-600 mt-1">+15% ce mois</p>*/}
+                {/*        </CardContent>*/}
+                {/*    </Card>*/}
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">RDV Aujourd'hui</CardTitle>
-                            <Clock className="h-4 w-4 text-orange-600"/>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-gray-900">{stats.todayAppointments}</div>
-                            <p className="text-xs text-gray-600 mt-1">3 séances prévues</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                {/*    <Card>*/}
+                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
+                {/*            <CardTitle className="text-sm font-medium text-gray-600">RDV Aujourd'hui</CardTitle>*/}
+                {/*            <Clock className="h-4 w-4 text-orange-600"/>*/}
+                {/*        </CardHeader>*/}
+                {/*        <CardContent>*/}
+                {/*            <div className="text-2xl font-bold text-gray-900">{stats.todayAppointments}</div>*/}
+                {/*            <p className="text-xs text-gray-600 mt-1">3 séances prévues</p>*/}
+                {/*        </CardContent>*/}
+                {/*    </Card>*/}
+                {/*</div>*/}
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -136,22 +135,21 @@ export default function AdminDashboard() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Users className="w-5 h-5 text-orange-600"/>
-                                Gestion Clients
+                                Gestion coach
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-gray-600 mb-4">
-                                Gérer la base de données clients, ajouter de nouveaux clients, modifier les
-                                informations.
+                                Gérer les coachs et affiliations
                             </p>
                             <div className="flex gap-2">
-                                <Link href="/admin/clients">
-                                    <Button className="bg-orange-600 hover:bg-orange-700">Voir les clients</Button>
+                                <Link href="/admin/coach">
+                                    <Button className="bg-orange-600 hover:bg-orange-700">Voir les coach</Button>
                                 </Link>
-                                <Link href="/admin/clients/new">
+                                <Link href="/admin/services/new">
                                     <Button variant="outline">
-                                        <UserPlus className="w-4 h-4 mr-2"/>
-                                        Nouveau
+                                        <PackagePlus className="w-4 h-4 mr-2"/>
+                                        Nouveau service
                                     </Button>
                                 </Link>
                             </div>
@@ -182,22 +180,6 @@ export default function AdminDashboard() {
                         </CardContent>
                     </Card>
 
-                    <Card className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-orange-600"/>
-                                Rapports
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-600 mb-4">
-                                Consulter les statistiques, rapports financiers et analyses de performance.
-                            </p>
-                            <Link href="/admin/reports">
-                                <Button className="bg-orange-600 hover:bg-orange-700">Voir les rapports</Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
                 </div>
             </div>
         </div>

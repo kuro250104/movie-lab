@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Identifiants invalides" }, { status: 401 })
         }
 
-        const token = generateToken(admin)
+        const token = await generateToken(admin)
 
         const response = NextResponse.json({
             success: true,

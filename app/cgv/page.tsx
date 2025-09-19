@@ -50,7 +50,7 @@ export default function CGVPage() {
               transition={{ delay: 0.7, duration: 0.8 }}
               className="text-xl text-gray-300 leading-relaxed max-w-2xl"
             >
-              Dernière mise à jour : Janvier 2024
+              Dernière mise à jour : Aout 2025
             </motion.p>
           </div>
         </motion.div>

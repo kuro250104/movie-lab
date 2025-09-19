@@ -1,10 +1,12 @@
+// lib/auth.ts
 import type { NextRequest } from "next/server"
 import { SignJWT, jwtVerify } from "jose"
-import bcrypt from "bcryptjs"
 import { sql } from "./db"
+import bcrypt from "bcryptjs"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
-const secret = new TextEncoder().encode(JWT_SECRET)
+const secretStr = process.env.JWT_SECRET
+if (!secretStr) throw new Error("JWT_SECRET is missing")
+const secret = new TextEncoder().encode(secretStr)
 
 export interface AdminUser {
     id: number
@@ -45,30 +47,35 @@ export async function verifyToken(token: string): Promise<AdminUser | null> {
 export async function getAdminFromRequest(request: NextRequest): Promise<AdminUser | null> {
     const token = request.cookies.get("admin-token")?.value
     if (!token) return null
-
     return await verifyToken(token)
 }
 
 export async function authenticateAdmin(email: string, password: string): Promise<AdminUser | null> {
     try {
-        const result = await sql`
+        const result = await sql/* sql */`
             SELECT id, email, password_hash, name, role
             FROM admins
             WHERE email = ${email}
+                LIMIT 1
         `
 
-        if (result.length === 0) return null
+        if (!result || result.length === 0) return null
 
-        const admin = result[0]
-        const isValid = await verifyPassword(password, admin.password_hash)
+        const row = result[0]
+        const passwordHash: string | undefined = row.password_hash ?? row.passwordHash
+        if (!passwordHash) {
+            console.error("Admins.password_hash manquant pour:", row?.email)
+            return null
+        }
 
-        if (!isValid) return null
+        const ok = await verifyPassword(password, passwordHash)
+        if (!ok) return null
 
         return {
-            id: admin.id,
-            email: admin.email,
-            name: admin.name,
-            role: admin.role,
+            id: row.id,
+            email: row.email,
+            name: row.name,
+            role: row.role,
         }
     } catch (error) {
         console.error("Authentication error:", error)

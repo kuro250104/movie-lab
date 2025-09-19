@@ -8,6 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, Mail, AlertCircle, Info } from "lucide-react"
 import Image from "next/image"
 
+import bcrypt from "bcryptjs";
+async function generateHash(password: string) {
+    const hash = await bcrypt.hash(password, 10)
+    console.log("Hash généré :", hash)
+}
+
+generateHash("admin123")
+
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -63,7 +71,7 @@ export default function AdminLoginPage() {
                     <CardHeader className="text-center">
                         <div className="flex justify-center mb-4">
                             <div className="relative h-16 w-16">
-                                <Image src="/logo.png" alt="Logo Movilab" fill className="object-contain" />
+                                <Image src="/logo.svg" alt="Logo Movilab" fill className="object-contain" />
                             </div>
                         </div>
                         <CardTitle className="text-2xl font-bold text-white">Administration movi-lab</CardTitle>

@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(clients)
   } catch (error) {
-    console.error("Error fetching clients:", error)
-    return NextResponse.json({ error: "Erreur lors de la récupération des clients" }, { status: 500 })
+    console.error("Error fetching coaches:", error)
+    return NextResponse.json({ error: "Erreur lors de la récupération des coaches" }, { status: 500 })
   }
 }
 

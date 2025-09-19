@@ -1,33 +1,33 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Code, Palette, Target, Users } from 'lucide-react'
+import {BarChart2Icon, ChevronLeft, ChevronRight, Code, Palette, Target, Users} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const expertises = [
   {
     icon: <Code className="w-12 h-12" />,
-    title: "Technologies & Outils",
-    description: "Analyse 3D de pointe, capteurs de mouvement, et outils technologiques innovants pour une évaluation précise de votre foulée.",
-    features: ["Analyse 3D", "Capteurs IoT", "IA prédictive"]
+    title: "Technologies de pointe",
+    description: "Analyse quantifiée du mouvement avec des capteurs.",
+    features: ["Analyse posturale 3D", "Analyse musculaire","VO2Max", "Questionnaires numériques"]
   },
   {
     icon: <Target className="w-12 h-12" />,
-    title: "Approche 360°",
-    description: "Une approche complète qui prend en compte tous les aspects de votre course : technique, physique et mental.",
-    features: ["Analyse complète", "Suivi personnalisé", "Optimisation globale"]
+    title: "Approche globale",
+    description: "Une approche complète qui prend en compte tous les aspects de votre course.",
+    features: ["Entrainement", "Facteurs biomécaniques", "Facteurs mentaux"]
   },
   {
-    icon: <Palette className="w-12 h-12" />,
-    title: "Domaines et Stratégies",
-    description: "Expertise dans tous les domaines de la course à pied, de la prévention des blessures à l'optimisation des performances.",
-    features: ["Prévention", "Performance", "Récupération"]
+    icon: <BarChart2Icon className="w-12 h-12" />,
+    title: "Domaines",
+    description: "Expertise dans les domaines les plus importants de la course à pied.",
+    features: ["Prévention", "Performance", "Douleurs"]
   },
   {
     icon: <Users className="w-12 h-12" />,
-    title: "Accompagnement et Formations",
-    description: "Un accompagnement personnalisé avec des formations adaptées à votre niveau et vos objectifs.",
-    features: ["Coaching individuel", "Plans d'entraînement", "Suivi continu"]
+    title: "Accompagnement",
+    description: "Un accompagnement personnalisé avec des partenaires externes.",
+    features: ["Médecine du sport", "Coaching running", "Préparation mentale", "Nutrition"]
   }
 ]
 
