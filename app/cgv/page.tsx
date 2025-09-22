@@ -1,199 +1,128 @@
 "use client"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { ArrowLeft, FileText, Calendar, Euro } from "lucide-react"
+import { FileText } from "lucide-react"
+import LegalLayout from "@/components/legal-layout"
 
 export default function CGVPage() {
-  return (
-    <main className="flex flex-col text-black bg-white min-h-screen">
-      {/* Hero Section */}
-      <section className="relative w-full h-[400px] overflow-hidden bg-gradient-to-br from-gray-900 to-black">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0 z-10 flex flex-col justify-center px-6 max-w-7xl mx-auto text-white"
+    return (
+        <LegalLayout
+            label="Conditions Générales"
+            title="Conditions Générales de Vente (CGV)"
+            updatedAt="19/09/2025"
+            descContent="Applicable à partir du 19/09/2025. Les présentes Conditions Générales de Vente régissent les relations contractuelles entre Movi-Lab et ses clients, particuliers ou professionnels."
+            icon={<FileText className="w-4 h-4" />}
         >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors mb-8 w-fit"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l'accueil
-          </Link>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Identification de la société</h2>
+            <ul className="list-disc pl-6 space-y-2">
+                <li>SIRET (siège) : 938 183 654 000 12</li>
+                <li>Forme Juridique : SASU, société par actions simplifiée unipersonnelle</li>
+                <li>Numéro de TVA : FR41938183654</li>
+                <li>Inscription au RCS : Greffe de Toulouse, le 09/12/2024</li>
+                <li>Inscription au RNE : Inscrit</li>
+                <li>Numéro RCS : 938 183 654 R.C.S. Toulouse</li>
+            </ul>
 
-          <div className="max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="mb-6"
-            >
-              <div className="inline-flex items-center gap-2 bg-orange-500/20 backdrop-blur-sm border border-orange-500/30 rounded-full px-4 py-2 text-orange-400 text-sm font-medium">
-                <FileText className="w-4 h-4" />
-                Conditions Générales
-              </div>
-            </motion.div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Objet</h2>
+            <p>
+                Les présentes Conditions Générales de Vente (CGV) définissent les conditions contractuelles applicables à toute
+                commande passée auprès de Movi-Lab par un client consommateur ou professionnel (ci-après « le Client »),
+                concernant les services d’analyse biomécanique et vidéo proposés par Movi-Lab.
+            </p>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1 }}
-              className="text-5xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent"
-            >
-              Conditions Générales de Vente
-            </motion.h1>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Services proposés</h2>
+            <p>Movi-Lab propose plusieurs formules de services, dont notamment :</p>
+            <h3 className="text-2xl font-semibold mt-6 mb-2">Pack Prévention</h3>
+            <ul className="list-disc pl-6 space-y-1">
+                <li>Analyse de la course</li>
+                <li>Analyse posturale</li>
+                <li>Proposition de chaussures et conseil technique</li>
+                <li>Proposition des exercices musculaires</li>
+                <li>Évaluation des gestes mal adaptés à la douleur</li>
+            </ul>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="text-xl text-gray-300 leading-relaxed max-w-2xl"
-            >
-              Dernière mise à jour : Aout 2025
-            </motion.p>
-          </div>
-        </motion.div>
-      </section>
+            <h3 className="text-2xl font-semibold mt-6 mb-2">Pack Performance</h3>
+            <ul className="list-disc pl-6 space-y-1">
+                <li>Analyse course corps complet</li>
+                <li>Analyse posturale</li>
+                <li>Analyse chaussures et recommandations, conseils techniques</li>
+                <li>Bilan musculaire</li>
+                <li>Restitution personnalisée</li>
+            </ul>
 
-      {/* Content */}
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="px-6 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8 md:p-12"
-          >
-            <div className="prose prose-lg max-w-none">
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <FileText className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Article 1 - Objet
-                </h2>
-                <p className="text-gray-700 leading-relaxed">
-                  Les présentes conditions générales de vente (CGV) régissent les relations contractuelles entre la
-                  société movi-lab, SARL au capital de 10 000 euros, immatriculée au RCS de Toulouse sous le numéro 123
-                  456 789, dont le siège social est situé 2 Rue Lieutenant Guy Dedieu, 31400 Toulouse, et ses clients
-                  dans le cadre de la vente de services d'analyse biomécanique et de coaching sportif.
-                </p>
-              </div>
+            <p className="mt-4">
+                Les prestations de Movi-Lab sont proposées à des tarifs compris entre 180 € et 280 € TTC selon la formule
+                choisie. Le prix exact est communiqué avant la réservation. Le règlement s’effectue par carte bancaire ou en
+                espèces, à l’issue de la séance. Aucun escompte pour paiement anticipé n’est accordé.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <Euro className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Article 2 - Prix et Paiement
-                </h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    <strong>2.1 Prix :</strong> Les prix de nos services sont indiqués en euros TTC :
-                  </p>
-                  <ul className="list-disc pl-6 space-y-2">
-                    <li>M-Starter : 119€ TTC</li>
-                    <li>M-Pacer : 139€ TTC</li>
-                    <li>M-Finisher : 159€ TTC</li>
-                  </ul>
-                  <p>
-                    <strong>2.2 Modalités de paiement :</strong> Le paiement s'effectue par carte bancaire, virement ou
-                    espèces. Le règlement est exigible à la commande pour les prestations ponctuelles.
-                  </p>
-                  <p>
-                    <strong>2.3 Retard de paiement :</strong> Tout retard de paiement entraîne l'exigibilité immédiate
-                    de l'intégralité des sommes dues et l'application de pénalités de retard au taux de 3 fois le taux
-                    légal.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Commande</h2>
+            <p>
+                Toute commande est réputée ferme et définitive dès la réservation de la séance. Le Prestataire se réserve le
+                droit de refuser une commande si les informations fournies par le Client sont manifestement incomplètes ou
+                erronées.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <Calendar className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Article 3 - Prestations et Délais
-                </h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    <strong>3.1 Description des prestations :</strong>
-                  </p>
-                  <ul className="list-disc pl-6 space-y-2">
-                    <li>
-                      <strong>M-Starter :</strong> Analyse 3D de la foulée, diagnostic personnalisé (1h)
-                    </li>
-                    <li>
-                      <strong>M-Pacer :</strong> M-Starter + analyse musculaire + évaluation chaussures (1h30)
-                    </li>
-                    <li>
-                      <strong>M-Finisher :</strong> M-Pacer + plan d'entraînement + suivi 12 semaines
-                    </li>
-                  </ul>
-                  <p>
-                    <strong>3.2 Délais :</strong> Les rendez-vous sont programmés selon nos disponibilités. Un rapport
-                    détaillé est remis dans les 48h suivant la séance.
-                  </p>
-                  <p>
-                    <strong>3.3 Annulation :</strong> Toute annulation doit intervenir au moins 24h avant le
-                    rendez-vous. En cas d'annulation tardive, la séance sera due intégralement.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Prix et modalités de paiement</h2>
+            <p>
+                Les prix applicables sont ceux en vigueur au jour de la commande, exprimés en euros TTC. Le règlement s’effectue
+                par carte bancaire ou en espèces, à l’issue de la séance. Aucun escompte pour paiement anticipé n’est accordé.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Article 4 - Droit de Rétractation</h2>
-                <p className="text-gray-700 leading-relaxed">
-                  Conformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne peut être
-                  exercé pour les prestations de services pleinement exécutées avant la fin du délai de rétractation et
-                  dont l'exécution a commencé avec l'accord préalable exprès du consommateur.
-                </p>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Exécution des prestations</h2>
+            <p>
+                Les prestations sont réalisées au centre 2 rue du Lieutenant Guy Dedieu, 31300 Toulouse à la date et l’heure
+                convenues. Pour chaque formule, le compte rendu est remis dans un délai de 14 jours après la séance.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Article 5 - Responsabilité</h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    movi-lab s'engage à fournir des prestations conformes aux règles de l'art et aux normes en vigueur.
-                    Notre responsabilité est limitée aux dommages directs et prévisibles.
-                  </p>
-                  <p>
-                    Le client s'engage à signaler tout problème de santé susceptible de contre-indiquer la pratique
-                    sportive. movi-lab ne saurait être tenu responsable des conséquences d'une information erronée ou
-                    incomplète.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Annulation et report</h2>
+            <p>
+                Toute annulation par le Client doit être notifiée au moins 48h avant la date prévue. Un report peut être accepté
+                sans frais s’il est demandé au moins 24h avant la séance.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Article 6 - Protection des Données</h2>
-                <p className="text-gray-700 leading-relaxed">
-                  Les données personnelles collectées sont traitées conformément à notre politique de confidentialité et
-                  au RGPD. Elles sont utilisées uniquement dans le cadre de nos prestations et ne sont jamais transmises
-                  à des tiers sans consentement.
-                </p>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Droit de rétractation</h2>
+            <p>
+                Conformément aux articles L.221-18 et suivants du Code de la consommation, le Client consommateur dispose d’un
+                délai de 14 jours à compter de la conclusion du contrat pour exercer son droit de rétractation, sauf si le
+                service a été pleinement exécuté avant la fin de ce délai avec l’accord exprès du Client et son renoncement à ce
+                droit.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Article 7 - Litiges</h2>
-                <p className="text-gray-700 leading-relaxed">
-                  En cas de litige, une solution amiable sera recherchée avant toute action judiciaire. À défaut, les
-                  tribunaux de Toulouse seront seuls compétents. Le droit français est applicable.
-                </p>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Responsabilité</h2>
+            <p>
+                Movi-Lab s’engage à fournir un service conforme aux règles de l’art. Les prestations ont une finalité d’analyse
+                et de conseil, et ne constituent pas un diagnostic médical. Movi-Lab ne pourra être tenu responsable des
+                blessures, incidents ou conséquences liées à la pratique sportive du Client. La responsabilité du Prestataire est
+                limitée, tous préjudices confondus, au montant payé pour la prestation concernée.
+            </p>
 
-              <div className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-r-xl">
-                <p className="text-gray-700">
-                  <strong>Contact :</strong> Pour toute question relative aux présentes CGV, vous pouvez nous contacter
-                  à l'adresse info@movi-lab.fr ou au +33 (0)1 23 45 67 89.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    </main>
-  )
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Propriété intellectuelle</h2>
+            <p>
+                Movi-Lab est propriétaire exclusif de tous les droits de propriété intellectuelle relatifs au Site et aux
+                Services. Le Client bénéficie d’un droit d’utilisation strictement personnel et non cessible. Toute reproduction,
+                diffusion ou exploitation sans autorisation est interdite.
+            </p>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Données personnelles et vidéos</h2>
+            <p>
+                Movi-Lab collecte et traite les données personnelles du Client conformément au RGPD. Les vidéos et données
+                biomécaniques sont conservées 5 ans. Toute utilisation à des fins scientifiques, pédagogiques ou promotionnelles
+                nécessite l’accord écrit du Client. Le Client dispose d’un droit d’accès, de rectification et de suppression de
+                ses données en contactant <a href="mailto:info@movi-lab.fr">info@movi-lab.fr</a>.
+            </p>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Force majeure</h2>
+            <p>
+                Movi-Lab ne pourra être tenu responsable en cas d’inexécution ou de retard dû à un cas de force majeure au sens
+                de l’article 1218 du Code civil.
+            </p>
+
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Litiges et droit applicable</h2>
+            <p>
+                En cas de litige, le Client est invité à rechercher une solution amiable. Conformément à l’article L.612-1 du
+                Code de la consommation, il peut recourir gratuitement à un médiateur de la consommation. À défaut, compétence
+                exclusive est attribuée aux tribunaux du ressort de Toulouse. Les présentes CGV sont régies par le droit
+                français.
+            </p>
+        </LegalLayout>
+    )
 }

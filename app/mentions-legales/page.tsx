@@ -1,233 +1,108 @@
 "use client"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { ArrowLeft, Building, User, Shield } from "lucide-react"
+import { Globe } from "lucide-react"
+import LegalLayout from "@/components/legal-layout"
 
 export default function MentionsLegalesPage() {
-  return (
-    <main className="flex flex-col text-black bg-white min-h-screen">
-      {/* Hero Section */}
-      <section className="relative w-full h-[400px] overflow-hidden bg-gradient-to-br from-gray-900 to-black">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0 z-10 flex flex-col justify-center px-6 max-w-7xl mx-auto text-white"
+    return (
+        <LegalLayout
+            label="Mentions légales"
+            title="Mentions légales – Movi-Lab"
+            updatedAt="19/09/2025"
+            descContent="Ces mentions légales définissent les informations relatives à l’édition, l’hébergement et l’utilisation du site Movi-Lab."
+            icon={<Globe className="w-4 h-4" />}
         >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 transition-colors mb-8 w-fit"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l'accueil
-          </Link>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Éditeur du site</h2>
+            <ul className="list-disc pl-6 space-y-2">
+                <li>Société : Movi-Lab</li>
+                <li>Forme juridique : SASU (société par actions simplifiée unipersonnelle)</li>
+                <li>Capital social : 500 euros</li>
+                <li>Siège social : 2 rue du Lieutenant Guy Dedieu, 31300 Toulouse</li>
+                <li>SIRET : 938 183 654 000 12</li>
+                <li>RCS : 938 183 654 R.C.S. Toulouse</li>
+                <li>Numéro de TVA intracommunautaire : FR41938183654</li>
+                <li>Email : <a href="mailto:info@movi-lab.fr">info@movi-lab.fr</a></li>
+            </ul>
 
-          <div className="max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="mb-6"
-            >
-              <div className="inline-flex items-center gap-2 bg-orange-500/20 backdrop-blur-sm border border-orange-500/30 rounded-full px-4 py-2 text-orange-400 text-sm font-medium">
-                <Building className="w-4 h-4" />
-                Informations légales
-              </div>
-            </motion.div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Directeur de la publication</h2>
+            <p>M. Galo Maldonado</p>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1 }}
-              className="text-5xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent"
-            >
-              Mentions Légales
-            </motion.h1>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Hébergement du site</h2>
+            <p>
+                Le site Movi-Lab est hébergé par :
+                <br />
+                <strong>Vercel</strong>
+                <br />
+                Site web : <a href="https://vercel.com/" target="_blank" className="text-orange-600">https://vercel.com/</a>
+            </p>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="text-xl text-gray-300 leading-relaxed max-w-2xl"
-            >
-              Informations légales et réglementaires
-            </motion.p>
-          </div>
-        </motion.div>
-      </section>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Propriété intellectuelle</h2>
+            <p>
+                L’ensemble des contenus présents sur le site (textes, images, vidéos, graphismes, logos, icônes, sons,
+                logiciels, etc.) est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive de
+                Movi-Lab ou de ses partenaires. Toute reproduction, représentation, modification, publication, transmission,
+                adaptation totale ou partielle est interdite sans autorisation écrite préalable.
+            </p>
+            <p>L’utilisateur dispose d’un droit d’usage strictement personnel pour consulter le site.</p>
 
-      {/* Content */}
-      <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="px-6 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8 md:p-12"
-          >
-            <div className="prose prose-lg max-w-none">
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <Building className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Éditeur du Site
-                </h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>
-                    <strong>Raison sociale :</strong> movi-lab SARL
-                  </p>
-                  <p>
-                    <strong>Capital social :</strong> 10 000 euros
-                  </p>
-                  <p>
-                    <strong>RCS :</strong> Toulouse 123 456 789
-                  </p>
-                  <p>
-                    <strong>SIRET :</strong> 123 456 789 00012
-                  </p>
-                  <p>
-                    <strong>Code APE :</strong> 9319Z (Autres activités liées au sport)
-                  </p>
-                  <p>
-                    <strong>TVA Intracommunautaire :</strong> FR12 123456789
-                  </p>
-                  <p>
-                    <strong>Adresse :</strong> 2 Rue Lieutenant Guy Dedieu, 31400 Toulouse, France
-                  </p>
-                  <p>
-                    <strong>Téléphone :</strong> +33 (0)1 23 45 67 89
-                  </p>
-                  <p>
-                    <strong>Email :</strong> info@movi-lab.fr
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Données personnelles</h2>
+            <p>
+                Movi-Lab collecte et traite les données personnelles conformément à sa Politique de confidentialité (RGPD).
+                Les utilisateurs disposent de droits d’accès, de rectification et de suppression, exercés via
+                <a href="mailto:info@movi-lab.fr"> info@movi-lab.fr</a>.
+                Plus de détails sont disponibles dans la Politique de confidentialité accessible sur le site.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <User className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Directeur de Publication
-                </h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>
-                    <strong>Nom :</strong> Galo Maldonado
-                  </p>
-                  <p>
-                    <strong>Qualité :</strong> Gérant
-                  </p>
-                  <p>
-                    <strong>Email :</strong> direction@movi-lab.fr
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Limitation de responsabilité</h2>
+            <p>
+                Movi-Lab s’efforce de fournir des informations fiables et à jour, mais ne garantit pas l’exactitude ou
+                l’exhaustivité. Movi-Lab ne peut être tenu responsable des dommages directs ou indirects liés à l’utilisation du
+                site. L’utilisateur reconnaît utiliser le site sous sa responsabilité exclusive.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Hébergement</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>
-                    <strong>Hébergeur :</strong> Vercel Inc.
-                  </p>
-                  <p>
-                    <strong>Adresse :</strong> 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis
-                  </p>
-                  <p>
-                    <strong>Site web :</strong>{" "}
-                    <a href="https://vercel.com" className="text-orange-600 hover:underline">
-                      vercel.com
-                    </a>
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Liens hypertextes</h2>
+            <p>
+                Le site peut contenir des liens vers des sites tiers. Movi-Lab ne contrôle pas leur contenu et décline toute
+                responsabilité quant à leur accessibilité ou leurs services. La création de liens vers ce site est soumise à
+                autorisation préalable écrite de Movi-Lab.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Conception et Développement</h2>
-                <div className="space-y-3 text-gray-700">
-                  <p>
-                    <strong>Conception :</strong> movi-lab
-                  </p>
-                  <p>
-                    <strong>Développement :</strong> movi-lab
-                  </p>
-                  <p>
-                    <strong>Technologies :</strong> Next.js, React, TypeScript
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Cookies et traceurs</h2>
+            <p>
+                Le site utilise des cookies pour améliorer la navigation et proposer des fonctionnalités adaptées. Les cookies
+                strictement nécessaires sont indispensables au fonctionnement du site. Des cookies analytiques peuvent être
+                utilisés pour suivre la fréquentation, dans le respect de l’anonymat. L’utilisateur peut gérer ses préférences
+                via son navigateur ou le bandeau de consentement affiché lors de la première visite.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-xl">
-                    <Shield className="w-6 h-6 text-orange-600" />
-                  </div>
-                  Propriété Intellectuelle
-                </h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et
-                    la propriété intellectuelle. Tous les droits de reproduction sont réservés, y compris pour les
-                    documents téléchargeables et les représentations iconographiques et photographiques.
-                  </p>
-                  <p>
-                    La reproduction de tout ou partie de ce site sur un support électronique quel qu'il soit est
-                    formellement interdite sauf autorisation expresse du directeur de publication.
-                  </p>
-                  <p>
-                    Les marques et logos figurant sur le site sont déposés par movi-lab ou éventuellement par ses
-                    partenaires. Toute reproduction totale ou partielle de ces marques ou logos effectuée à partir des
-                    éléments du site sans l'autorisation expresse de movi-lab est donc prohibée.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Responsabilité de l’utilisateur</h2>
+            <ul className="list-disc pl-6 space-y-2">
+                <li>Ne pas perturber le fonctionnement du site,</li>
+                <li>Ne pas introduire de virus ou logiciels malveillants,</li>
+                <li>Ne pas collecter les données personnelles d’autres utilisateurs sans consentement,</li>
+                <li>Respecter les droits de propriété intellectuelle et la législation en vigueur.</li>
+            </ul>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Limitation de Responsabilité</h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    Les informations contenues sur ce site sont aussi précises que possible et le site est
-                    périodiquement remis à jour, mais peut toutefois contenir des inexactitudes, des omissions ou des
-                    lacunes.
-                  </p>
-                  <p>
-                    Si vous constatez une lacune, erreur ou ce qui parait être un dysfonctionnement, merci de bien
-                    vouloir le signaler par email à l'adresse info@movi-lab.fr, en décrivant le problème de la manière
-                    la plus précise possible.
-                  </p>
-                  <p>
-                    movi-lab ne pourra en aucun cas être tenu responsable de tout dommage de quelque nature qu'il soit
-                    résultant de l'interprétation ou de l'utilisation des informations et/ou documents disponibles sur
-                    ce site.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Modification du site et des mentions légales</h2>
+            <p>
+                Movi-Lab se réserve le droit de modifier, suspendre ou supprimer tout ou partie du site et de ses contenus, à
+                tout moment et sans préavis. Les présentes mentions légales peuvent également être mises à jour. L’utilisateur
+                est invité à consulter régulièrement cette page.
+            </p>
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Liens Hypertextes</h2>
-                <div className="space-y-4 text-gray-700">
-                  <p>
-                    Les liens hypertextes mis en place dans le cadre du présent site web en direction d'autres
-                    ressources présentes sur le réseau Internet ne sauraient engager la responsabilité de movi-lab.
-                  </p>
-                  <p>
-                    De même, movi-lab ne peut être tenu responsable du contenu des sites qui auraient un lien vers le
-                    présent site.
-                  </p>
-                </div>
-              </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Droit applicable et juridiction compétente</h2>
+            <p>
+                Les présentes mentions légales sont régies par le droit français. Tout litige relatif à l’accès ou à
+                l’utilisation du site sera soumis aux tribunaux compétents de Toulouse, sauf dispositions légales contraires.
+            </p>
 
-              <div className="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-r-xl">
-                <p className="text-gray-700">
-                  <strong>Contact :</strong> Pour toute question concernant ces mentions légales, vous pouvez nous
-                  contacter à l'adresse info@movi-lab.fr ou au +33 (0)1 23 45 67 89.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    </main>
-  )
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Contact</h2>
+            <p>
+                Email : <a href="mailto:info@movi-lab.fr">info@movi-lab.fr</a>
+                <br />
+                Téléphone : <a href="tel:+33979219248">+33 9 79 21 92 48</a>
+                <br />
+                Adresse postale : 2 rue du Lieutenant Guy Dedieu, 31300 Toulouse
+            </p>
+        </LegalLayout>
+    )
 }
