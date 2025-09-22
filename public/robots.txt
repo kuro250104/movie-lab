@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://movi-lab.fr
+
+# Sitemaps
+Sitemap: https://movi-lab.fr/sitemap.xml
