@@ -261,7 +261,6 @@ export default function AboutPage() {
                                     <p className="text-orange-600 text-sm font-semibold uppercase mb-4">{member.role}</p>
                                     <p className="text-gray-700 text-base leading-relaxed whitespace-pre-line">{member.description}</p>
 
-                                    {/* ✅ Lien affiché seulement s’il existe */}
                                     {href && (
                                         <a
                                             href={href}

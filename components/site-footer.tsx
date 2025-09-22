@@ -118,28 +118,28 @@ export function SiteFooter() {
                             <span className="text-gray-400 text-sm font-medium">Suivez-nous :</span>
                             <div className="flex gap-3">
                                 <a
-                                    href="#"
+                                    href="https://www.instagram.com/movilab__/"
                                     className="p-2 bg-gray-800 hover:bg-orange-500 rounded-lg transition-all duration-300 transform hover:scale-110 group"
                                     aria-label="Instagram"
                                 >
                                     <Instagram className="w-5 h-5 text-gray-400 group-hover:text-white"/>
                                 </a>
+                                {/*<a*/}
+                                {/*    href="#"*/}
+                                {/*    className="p-2 bg-gray-800 hover:bg-orange-500 rounded-lg transition-all duration-300 transform hover:scale-110 group"*/}
+                                {/*    aria-label="YouTube"*/}
+                                {/*>*/}
+                                {/*    <Youtube className="w-5 h-5 text-gray-400 group-hover:text-white"/>*/}
+                                {/*</a>*/}
                                 <a
-                                    href="#"
-                                    className="p-2 bg-gray-800 hover:bg-orange-500 rounded-lg transition-all duration-300 transform hover:scale-110 group"
-                                    aria-label="YouTube"
-                                >
-                                    <Youtube className="w-5 h-5 text-gray-400 group-hover:text-white"/>
-                                </a>
-                                <a
-                                    href="#"
+                                    href="https://www.facebook.com/profile.php?id=61577249641936"
                                     className="p-2 bg-gray-800 hover:bg-orange-500 rounded-lg transition-all duration-300 transform hover:scale-110 group"
                                     aria-label="Facebook"
                                 >
                                     <Facebook className="w-5 h-5 text-gray-400 group-hover:text-white"/>
                                 </a>
                                 <a
-                                    href="#"
+                                    href="https://www.tiktok.com/@movilab3?_r=1&_d=em581h2a9a428f&sec_uid=MS4wLjABAAAArnqGhsBHU5rH7uuToTp6VU_nK5P6eQhIka4cpMrDiMYXhEG4iJoQQk51bTEyThl7&share_author_id=7431867529990325281&sharer_language=fr&source=h5_m&u_code=eh2lj0ebde1199&item_author_type=1&utm_source=copy&tt_from=copy&enable_checksum=1&utm_medium=ios&share_link_id=99CB308A-D3CD-4F3B-B198-3CF3E7984F26&user_id=7431867529990325281&sec_user_id=MS4wLjABAAAArnqGhsBHU5rH7uuToTp6VU_nK5P6eQhIka4cpMrDiMYXhEG4iJoQQk51bTEyThl7&social_share_type=4&ug_btm=b8727,b0&utm_campaign=client_share&share_app_id=1233"
                                     className="p-2 bg-gray-800 hover:bg-orange-500 rounded-lg transition-all duration-300 transform hover:scale-110 group"
                                     aria-label="TikTok"
                                 >
@@ -148,7 +148,6 @@ export function SiteFooter() {
                             </div>
                         </div>
 
-                        {/* Copyright */}
                         <div className="flex flex-col md:flex-row items-center gap-4 text-gray-400 text-sm">
                             <span>© 2025 Movilab - Tous droits réservés.</span>
                             <div className="flex gap-4">
@@ -161,6 +160,9 @@ export function SiteFooter() {
                                 </Link>
                                 <Link href="/cgv" className="hover:text-orange-400 transition-colors">
                                     CGV
+                                </Link>
+                                <Link href="/cgu" className="hover:text-orange-400 transition-colors">
+                                    CGU
                                 </Link>
                             </div>
                         </div>

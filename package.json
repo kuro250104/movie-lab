@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "postbuild": "next-sitemap"
+    "postbuild": "sh -c 'if [ \"$DISABLE_SITEMAP\" != \"1\" ]; then echo \"[postbuild] running next-sitemap\" && next-sitemap && echo \"[postbuild] done\"; else echo \"[postbuild] skipped\"; fi'"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

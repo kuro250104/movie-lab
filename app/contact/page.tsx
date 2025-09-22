@@ -69,7 +69,6 @@ export default function ContactPage() {
                 </motion.div>
             </section>
 
-            {/* Info Sections */}
             <section className="py-24 bg-gradient-to-br from-gray-50 to-gray-100 text-black">
                 <div className="px-6 max-w-7xl mx-auto">
                     <motion.div
@@ -138,7 +137,6 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            {/* Contact Form */}
             <section className="py-24 bg-gradient-to-br from-gray-900 to-black text-white">
                 <div className="px-6 max-w-4xl mx-auto">
                     <motion.div
@@ -213,7 +211,6 @@ export default function ContactPage() {
                 </div>
             </section>
 
-            {/* Map Section */}
             <section className="py-24 bg-gradient-to-br from-gray-50 to-gray-100 text-black">
                 <div className="px-6 max-w-7xl mx-auto">
                     <motion.div

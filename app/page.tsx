@@ -1,5 +1,4 @@
 "use client"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ExpertiseCarousel } from "@/components/expertise-carousel"
