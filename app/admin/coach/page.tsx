@@ -15,9 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 
-/* =======================
-   Types (local UI models)
-   ======================= */
+
 type Service = { id: number; description:string; duration_minutes:number; name: string; price: number; is_active: boolean; color?: string }
 type Coach = {
     id: number
@@ -30,13 +28,18 @@ type Coach = {
     lastAppointment?: string | null
     totalAppointments?: number | null
     status: "Actif" | "Inactif"
-    runningExperience?: "Débutant" | "Intermédiaire" | "Avancé"
+    coachType: "Coach sportif" | "Coach running" | "Préparateur mental" | "Autre" | null
     serviceIds: number[]
 }
 
-/* =======================
-   Helpers
-   ======================= */
+const COACH_TYPES: Coach["coachType"][] = [
+    "Coach sportif",
+    "Coach running",
+    "Préparateur mental",
+    "Autre",
+]
+
+
 const api = {
     async getServices(): Promise<Service[]> {
         const res = await fetch("/api/admin/services", { credentials: "include" })
@@ -48,7 +51,7 @@ const api = {
             description: r.description ?? "",
             price: typeof r.price === "string" ? parseFloat(r.price) : (r.price ?? 0),
             duration_minutes: r.duration_minutes ?? 60,
-            is_active: Boolean(r.is_active ?? r.active), // compat
+            is_active: Boolean(r.is_active ?? r.active),
             color: r.color ?? "bg-gray-500",
         }))
     },
@@ -100,7 +103,6 @@ const api = {
         const res = await fetch("/api/admin/coaches", { credentials: "include" })
         if (!res.ok) throw new Error("Erreur chargement coachs")
         const rows = await res.json()
-        // map payload (services array) -> UI serviceIds
         return rows.map((r: any) => ({
             id: r.id,
             firstName: r.firstName,
@@ -112,7 +114,7 @@ const api = {
             lastAppointment: r.lastAppointment ?? null,
             totalAppointments: r.totalAppointments ?? 0,
             status: (r.status === "Inactif" ? "Inactif" : "Actif") as Coach["status"],
-            runningExperience: (r.runningExperience ?? "Intermédiaire") as Coach["runningExperience"],
+            coachType: (r.coachType ?? "Coach") as Coach["coachType"],
             serviceIds: Array.isArray(r.services) ? r.services.map((s: any) => s.id) : [],
         }))
     },
@@ -124,7 +126,7 @@ const api = {
             phone: payload.phone ?? null,
             city: payload.city ?? null,
             status: payload.status,
-            runningExperience: payload.runningExperience ?? "Intermédiaire",
+            coachType: payload.coachType,
             dateOfBirth: payload.dateOfBirth ?? null,
             serviceIds: payload.serviceIds ?? [],
         }
@@ -145,9 +147,9 @@ const api = {
             phone: payload.phone,
             city: payload.city,
             status: payload.status,
-            runningExperience: payload.runningExperience,
+            coachType: payload.coachType,
             dateOfBirth: payload.dateOfBirth,
-            serviceIds: payload.serviceIds, // si fourni, remplace les affectations
+            serviceIds: payload.serviceIds,
         }
         const res = await fetch(`/api/admin/coaches/${id}`, {
             method: "PATCH",
@@ -183,9 +185,6 @@ export default function CoachesServicesPage() {
     const [openServiceModal, setOpenServiceModal] = useState(false)
     const [editingService, setEditingService] = useState<Service | null>(null)
 
-    /* =======================
-       Load data
-       ======================= */
     useEffect(() => {
         (async () => {
             try {
@@ -203,15 +202,21 @@ export default function CoachesServicesPage() {
         })()
     }, [])
 
-    /* =======================
-       UI helpers
-       ======================= */
-    const getStatusColor = (s: string) => (s === "Actif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800")
-    const getExperienceColor = (e?: string) =>
-        e === "Débutant" ? "bg-blue-100 text-blue-800" :
-            e === "Intermédiaire" ? "bg-orange-100 text-orange-800" :
-                e === "Avancé" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-800"
+    const getStatusColor = (s: string) =>
+        (s === "Actif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800")
 
+    const getCoachTypeColor = (t?: Coach["coachType"]) => {
+        switch (t) {
+            case "Coach sportif":
+                return "bg-blue-100 text-blue-800"
+            case "Coach running":
+                return "bg-emerald-100 text-emerald-800"
+            case "Préparateur mental":
+                return "bg-purple-100 text-purple-800"
+            default:
+                return "bg-gray-100 text-gray-800"
+        }
+    }
     const serviceById = useMemo(() => new Map(services.map(s => [s.id, s])), [services])
 
     const filteredCoaches = useMemo(() => {
@@ -223,9 +228,7 @@ export default function CoachesServicesPage() {
         })
     }, [coaches, searchTerm, filterStatus])
 
-    /* =======================
-       Coach CRUD
-       ======================= */
+
     const openNewCoach = () => {
         setEditingCoach({
             id: 0,
@@ -235,7 +238,7 @@ export default function CoachesServicesPage() {
             phone: "",
             city: "",
             status: "Actif",
-            runningExperience: "Intermédiaire",
+            coachType: "",
             serviceIds: [],
             dateOfBirth: null,
             lastAppointment: null,
@@ -279,22 +282,20 @@ export default function CoachesServicesPage() {
         }
     }
 
-    /* =======================
-       Service CRUD
-       ======================= */
-    const openNewService = () => {
-        setEditingService({
-            id: 0,
-            name: "",
-            description: "",
-            price: 0,
-            duration_minutes: 0,
-            is_active: true,
-            color: "bg-gray-500",
-        })
-        setOpenServiceModal(true)
-    }
-    const openEditService = (s: Service) => { setEditingService({ ...s }); setOpenServiceModal(true) }
+    //
+    // const openNewService = () => {
+    //     setEditingService({
+    //         id: 0,
+    //         name: "",
+    //         description: "",
+    //         price: 0,
+    //         duration_minutes: 0,
+    //         is_active: true,
+    //         color: "bg-gray-500",
+    //     })
+    //     setOpenServiceModal(true)
+    // }
+    // const openEditService = (s: Service) => { setEditingService({ ...s }); setOpenServiceModal(true) }
 
     const saveService = async () => {
         if (!editingService) return
@@ -333,7 +334,6 @@ export default function CoachesServicesPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -369,7 +369,6 @@ export default function CoachesServicesPage() {
             </header>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Filtres */}
                 <Card className="mb-6">
                     <CardContent className="p-6">
                         <div className="flex flex-col md:flex-row gap-4">
@@ -388,7 +387,6 @@ export default function CoachesServicesPage() {
                     </CardContent>
                 </Card>
 
-                {/* Liste coaches */}
                 <div className="grid gap-6">
                     {filteredCoaches.map(c => {
                         const cServices = c.serviceIds.map(id => serviceById.get(id)).filter(Boolean) as Service[]
@@ -408,7 +406,7 @@ export default function CoachesServicesPage() {
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <Badge className={getStatusColor(c.status)}>{c.status}</Badge>
-                                                    <Badge className={getExperienceColor(c.runningExperience)}>{c.runningExperience ?? "—"}</Badge>
+                                                    <Badge className={getCoachTypeColor(c.coachType)}>{c.coachType ?? "—"}</Badge>
                                                 </div>
                                             </div>
 
@@ -458,7 +456,6 @@ export default function CoachesServicesPage() {
                 )}
             </div>
 
-            {/* Modal coach */}
             <Dialog open={openCoachModal} onOpenChange={setOpenCoachModal}>
                 <DialogContent>
                     <DialogHeader>
@@ -467,7 +464,6 @@ export default function CoachesServicesPage() {
 
                     {editingCoach && (
                         <div className="space-y-4">
-                            {/* Identité */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label>Prénom</Label>
@@ -532,14 +528,12 @@ export default function CoachesServicesPage() {
                                 <div>
                                     <Label>Expérience running</Label>
                                     <Select
-                                        value={editingCoach.runningExperience ?? "Intermédiaire"}
-                                        onValueChange={v => setEditingCoach({ ...editingCoach, runningExperience: v as Coach["runningExperience"] })}
+                                        value={editingCoach.coachType ?? "Intermédiaire"}
+                                        onValueChange={v => setEditingCoach({ ...editingCoach, coachType: v as Coach["coachType"] })}
                                     >
                                         <SelectTrigger><SelectValue placeholder="Niveau" /></SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Débutant">Débutant</SelectItem>
-                                            <SelectItem value="Intermédiaire">Intermédiaire</SelectItem>
-                                            <SelectItem value="Avancé">Avancé</SelectItem>
+                                            {COACH_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -594,7 +588,6 @@ export default function CoachesServicesPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            {/* Modal service */}
             <Dialog open={openServiceModal} onOpenChange={setOpenServiceModal}>
                 <DialogContent>
                     <DialogHeader>

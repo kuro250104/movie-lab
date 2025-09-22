@@ -64,7 +64,6 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -129,7 +128,6 @@ export default function AdminDashboard() {
                 {/*    </Card>*/}
                 {/*</div>*/}
 
-                {/* Quick Actions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <Card className="hover:shadow-lg transition-shadow">
                         <CardHeader>
@@ -147,7 +145,7 @@ export default function AdminDashboard() {
                                     <Button className="bg-orange-600 hover:bg-orange-700">Voir les coach</Button>
                                 </Link>
                                 <Link href="/admin/services/new">
-                                    <Button variant="outline">
+                                    <Button className="bg-orange-600 hover:bg-orange-700">
                                         <PackagePlus className="w-4 h-4 mr-2"/>
                                         Nouveau service
                                     </Button>

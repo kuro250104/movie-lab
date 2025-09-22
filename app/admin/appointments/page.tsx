@@ -12,12 +12,12 @@ import { debugLog, isDebugEnabled } from "@/lib/debugLog"
 
 type Appointment = {
     id: number
-    date: string        // "YYYY-MM-DD"
-    time: string        // "HH:MM"
+    date: string
+    time: string
     lastName: string
     firstName: string
     clientEmail: string
-    serviceName: string // <-- ici
+    serviceName: string
     price: number
     status: string
     paymentStatus: string | null
@@ -27,7 +27,6 @@ type Appointment = {
 const daysOfWeek = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"]
 const months = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
 
-// Palette + hash pour une couleur stable par nom de service
 const SERVICE_COLOR_CLASSES = [
     "bg-emerald-500","bg-sky-500","bg-violet-500","bg-amber-500",
     "bg-pink-500","bg-indigo-500","bg-cyan-500","bg-lime-500"
@@ -91,7 +90,6 @@ export default function AppointmentsCalendarPage() {
                 debugLog("received length:", Array.isArray(raw) ? raw.length : "(not array)")
                 debugLog("sample[0]:", raw?.[0])
 
-                // Normalisation : on accepte soit startsAt/endsAt, soit date/time déjà calculés
                 const data: Appointment[] = (raw ?? []).map((r: any) => {
                     let dateStr = r.date
                     let timeStr = r.time
@@ -131,7 +129,6 @@ export default function AppointmentsCalendarPage() {
         const month = currentDate.getMonth()
         const firstDay = new Date(year, month, 1)
         const startDate = new Date(firstDay)
-        // Lundi = début de semaine
         startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1))
         const days: Date[] = []
         const cur = new Date(startDate)
@@ -177,7 +174,6 @@ export default function AppointmentsCalendarPage() {
         [appointments, selectedDate]
     )
 
-    // Stats rapides
     const stats = useMemo(() => {
         const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2,"0")}`
         const inMonth = appointments.filter(a => a.date.startsWith(monthKey))
@@ -190,7 +186,6 @@ export default function AppointmentsCalendarPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -230,7 +225,6 @@ export default function AppointmentsCalendarPage() {
                 {loading && <p className="text-sm text-gray-600">Chargement des rendez-vous…</p>}
                 {error && !loading && <p className="text-sm text-red-600">Erreur : {error}</p>}
 
-                {/* Panneau Debug */}
                 {showDebug && (
                     <Card className="mb-6">
                         <CardContent className="p-4 text-xs">
@@ -263,11 +257,9 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Calendrier principal */}
                     <div className="lg:col-span-3">
                         <Card>
                             <CardContent className="p-6">
-                                {/* Navigation du calendrier */}
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-2xl font-bold text-gray-900">
                                         {months[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -282,16 +274,13 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}
                                     </div>
                                 </div>
 
-                                {/* Grille du calendrier */}
                                 <div className="grid grid-cols-7 gap-1">
-                                    {/* En-têtes des jours */}
                                     {daysOfWeek.map((day) => (
                                         <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 bg-gray-50 rounded-lg">
                                             {day}
                                         </div>
                                     ))}
 
-                                    {/* Jours du calendrier */}
                                     {calendarDays.map((date, index) => {
                                         const dayAppointments = getAppointmentsForDate(date)
                                         const dateString = toLocalYMD(date)
@@ -340,7 +329,6 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}
                         </Card>
                     </div>
 
-                    {/* Panneau latéral */}
                     <div className="space-y-6">
                         <Card>
                             <CardContent className="p-4">
@@ -364,7 +352,6 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}
                             </CardContent>
                         </Card>
 
-                        {/* Détails du jour sélectionné */}
                         {selectedDate && (
                             <Card>
                                 <CardContent className="p-4">
@@ -424,7 +411,6 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}
                             </Card>
                         )}
 
-                        {/* Statistiques rapides */}
                         <Card>
                             <CardContent className="p-4">
                                 <h3 className="font-semibold text-gray-900 mb-3">Ce mois</h3>

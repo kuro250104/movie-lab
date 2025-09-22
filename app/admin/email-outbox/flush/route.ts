@@ -19,7 +19,6 @@ export async function POST() {
             sent++
         } catch (e) {
             console.error("MAIL SEND ERROR", m.id, e)
-            // tu peux aussi ajouter une colonne retry_count / last_error pour re-tenter
         }
     }
 

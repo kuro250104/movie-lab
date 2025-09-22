@@ -177,7 +177,6 @@ export default function CoachesServicesPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
@@ -208,7 +207,6 @@ export default function CoachesServicesPage() {
             </header>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Filtres */}
                 <Card className="mb-6">
                     <CardContent className="p-6">
                         <div className="flex flex-col md:flex-row gap-4">
@@ -225,7 +223,6 @@ export default function CoachesServicesPage() {
                     </CardContent>
                 </Card>
 
-                {/* Liste services */}
                 <div className="grid gap-6">
                     {filteredServices.map((s) => (
                         <Card key={s.id} className="hover:shadow-lg transition-shadow">
@@ -284,7 +281,6 @@ export default function CoachesServicesPage() {
                 )}
             </div>
 
-            {/* Modal service (create / edit) */}
             <Dialog open={openServiceModal} onOpenChange={setOpenServiceModal}>
                 <DialogContent>
                     <DialogHeader>
@@ -293,7 +289,6 @@ export default function CoachesServicesPage() {
 
                     {editingService && (
                         <div className="space-y-4">
-                            {/* Nom */}
                             <div>
                                 <Label>Nom du service</Label>
                                 <Input
@@ -302,7 +297,6 @@ export default function CoachesServicesPage() {
                                 />
                             </div>
 
-                            {/* Description */}
                             <div>
                                 <Label>Description</Label>
                                 <Input
@@ -311,7 +305,6 @@ export default function CoachesServicesPage() {
                                 />
                             </div>
 
-                            {/* Prix */}
                             <div>
                                 <Label>Prix (€)</Label>
                                 <Input
@@ -327,7 +320,6 @@ export default function CoachesServicesPage() {
                                 />
                             </div>
 
-                            {/* Durée */}
                             <div>
                                 <Label>Durée (minutes)</Label>
                                 <Input
@@ -343,7 +335,6 @@ export default function CoachesServicesPage() {
                                 />
                             </div>
 
-                            {/* Couleur */}
                             <div>
                                 <Label>Couleur (badge)</Label>
                                 <Select
@@ -363,7 +354,6 @@ export default function CoachesServicesPage() {
                                 </Select>
                             </div>
 
-                            {/* Actif */}
                             <div className="flex items-center gap-2">
                                 <Checkbox
                                     checked={editingService.is_active}

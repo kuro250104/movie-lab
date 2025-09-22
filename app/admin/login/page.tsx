@@ -5,16 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock, Mail, AlertCircle, Info } from "lucide-react"
+import { Lock, Mail, AlertCircle } from "lucide-react"
 import Image from "next/image"
-
-import bcrypt from "bcryptjs";
-async function generateHash(password: string) {
-    const hash = await bcrypt.hash(password, 10)
-    console.log("Hash généré :", hash)
-}
-
-generateHash("admin123")
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("")

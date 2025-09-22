@@ -21,7 +21,7 @@ type Rule = {
 
 type Exception = {
     id: number
-    date: string // YYYY-MM-DD
+    date: string
     start_minute: number | null
     end_minute: number | null
     is_available: boolean
@@ -53,13 +53,11 @@ const toHHMM = (min: number) => {
 export function AvailabilityManager({ coachId }: { coachId: number }) {
     const [loading, setLoading] = useState(true)
 
-    // rules
     const [rules, setRules] = useState<Rule[]>([])
     const [ruleWeekday, setRuleWeekday] = useState<number>(1)
     const [ruleStart, setRuleStart] = useState("09:00")
     const [ruleEnd, setRuleEnd] = useState("18:00")
 
-    // exceptions
     const [exceptions, setExceptions] = useState<Exception[]>([])
     const [excDate, setExcDate] = useState<string>("")
     const [excWholeDayBlocked, setExcWholeDayBlocked] = useState<boolean>(false)
@@ -151,7 +149,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
         }
     }
 
-    // ---- EXCEPTIONS handlers ----
     const addException = async () => {
         if (!excDate) {
             alert("Choisis une date.")
@@ -160,7 +157,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
         let payload: any = { date: excDate, isAvailable: excAvailable, note: excNote || null }
         if (excAvailable) {
-            // fenêtre dispo requise
             const start_minute = toMin(excStart)
             const end_minute = toMin(excEnd)
             if (end_minute <= start_minute) {
@@ -170,7 +166,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
             payload.startMinute = start_minute
             payload.endMinute = end_minute
         } else {
-            // journée bloquée
             payload.startMinute = null
             payload.endMinute = null
         }
@@ -183,7 +178,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
             })
             if (!r.ok) throw new Error("create exception failed")
             const row = await r.json()
-            // upsert (le POST fait un upsert côté API)
             setExceptions((prev) => {
                 const idx = prev.findIndex((x) => x.id === row.id)
                 if (idx === -1) return [row, ...prev].sort(sortExceptions)
@@ -191,7 +185,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                 copy[idx] = row
                 return copy.sort(sortExceptions)
             })
-            // reset form
             setExcNote("")
         } catch (e) {
             console.error(e)
@@ -213,7 +206,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Règles hebdo */}
             <Card className="rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl">Règles hebdomadaires</CardTitle>
@@ -222,7 +214,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                    {/* Formulaire ajout règle */}
                     <div className="grid sm:grid-cols-5 gap-3 items-end">
                         <div className="sm:col-span-2">
                             <Label>Jour</Label>
@@ -288,13 +279,11 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                 </CardContent>
             </Card>
 
-            {/* Exceptions ponctuelles */}
             <Card className="rounded-2xl shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-xl">Exceptions ponctuelles</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                    {/* Formulaire ajout exception */}
                     <div className="grid sm:grid-cols-6 gap-3 items-end">
                         <div className="sm:col-span-2">
                             <Label>Date</Label>
@@ -353,7 +342,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
                     <Separator />
 
-                    {/* Liste exceptions */}
                     <div className="space-y-2">
                         {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
                         {!loading && exceptions.length === 0 && (
@@ -384,7 +372,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
     )
 }
 
-// ----- helpers -----
 const sortRules = (a: Rule, b: Rule) =>
     a.weekday - b.weekday || a.startMinute - b.startMinute
 
