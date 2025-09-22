@@ -1,4 +1,3 @@
-// lib/auth.ts
 import type { NextRequest } from "next/server"
 import { SignJWT, jwtVerify } from "jose"
 import { sql } from "./db"

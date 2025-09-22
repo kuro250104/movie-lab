@@ -29,11 +29,9 @@ export async function POST(req: NextRequest) {
         const endsAt    = nn(body?.endsAt)
         const notes     = nn(body?.notes)
 
-        // URL publique pour les liens d'acceptation/refus
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL
         console.log("[BOOKING] baseUrl:", baseUrl)
 
-        // Validation claire
         if (!firstName || !lastName || !email || !serviceId || !startsAt) {
             return NextResponse.json(
                 { error: "firstName, lastName, email, serviceId, startsAt are required" },
@@ -41,7 +39,6 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // 1) Upsert client
         let clientRows
         try {
             clientRows = await sql/* sql */`

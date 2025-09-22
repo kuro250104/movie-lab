@@ -1,9 +1,9 @@
+export const runtime = "nodejs"
 import { type NextRequest, NextResponse } from "next/server"
-import { sql, ensureDatabaseInitialized } from "@/lib/db"
+import { sql } from "@/lib/db"
 import { getAdminFromRequest } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
-  await ensureDatabaseInitialized()
 
   const admin = await getAdminFromRequest(request)
   if (!admin) {
@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  await ensureDatabaseInitialized()
 
   const admin = await getAdminFromRequest(request)
   if (!admin) {

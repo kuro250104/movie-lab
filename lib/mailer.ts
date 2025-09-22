@@ -31,7 +31,6 @@ export async function getTransport() {
         auth: { user, pass },
     })
 
-    // Essayons de vérifier la connexion une seule fois
     if (!verifiedOnce) {
         try {
             await transporter.verify()

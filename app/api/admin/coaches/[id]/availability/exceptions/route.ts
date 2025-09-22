@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     const rows = await sql/* sql */`
         SELECT
             id,
-            date::text      AS date,             -- ✅ renvoie "YYYY-MM-DD"
+            date::text      AS date,
       start_minute,
       end_minute,
       is_available,

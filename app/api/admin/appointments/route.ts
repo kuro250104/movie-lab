@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
                 ap.id,
                 to_char(ap.starts_at AT TIME ZONE 'Europe/Paris', 'YYYY-MM-DD') AS "date",
                 to_char(ap.starts_at AT TIME ZONE 'Europe/Paris', 'HH24:MI')    AS "time",
-                -- on récupère le client depuis la request correspondante si dispo
                 COALESCE(split_part(ar.customer_name, ' ', 1), '')              AS "firstName",
                 COALESCE(NULLIF(regexp_replace(ar.customer_name, '^[^ ]+\\s*', ''), ''), '') AS "lastName",
                 COALESCE(ar.customer_email, '')                                 AS "clientEmail",

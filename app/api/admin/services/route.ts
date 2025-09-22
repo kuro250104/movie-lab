@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const body = await request.json()
-    const { name, description = "", price = 0, duration_minutes = 60, is_active = true, color = "bg-gray-500" } = body ?? {}
+    const { name, description = "", price = "", duration_minutes = 60, is_active = true, color = "bg-gray-500" } = body ?? {}
 
     if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 })
 
