@@ -47,9 +47,7 @@ export default function Home() {
 
 
     if (loading) {
-        if (loading) {
-            return <LoadingPage message="Préparation de votre expérience MOVILAB..." variant="brand" size="md"/>
-        }
+        return <LoadingPage message="Préparation de votre expérience MOVILAB..." variant="brand" size="md"/>
     }
     return (
         <main className="flex min-h-screen flex-col text-white">
