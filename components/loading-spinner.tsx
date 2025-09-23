@@ -102,7 +102,7 @@ export function LoadingSpinner({ variant = "brand", size = "md", className = "" 
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
-                    <span className="text-lg font-bold text-gray-800">MOVILAB</span>
+                    <span className="text-lg font-bold text-gray-800">MOVI</span>
                     <motion.span
                         className="text-lg font-bold text-orange-500"
                         animate={{ scale: [1, 1.1, 1] }}
