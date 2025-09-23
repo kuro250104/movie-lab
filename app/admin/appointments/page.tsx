@@ -4,11 +4,20 @@ import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-    Calendar, Plus, Edit, Trash2, Clock, ArrowLeft, ChevronLeft, ChevronRight, Euro,
+import { Calendar,
+    Plus,
+    Edit,
+    Trash2,
+    Clock,
+    ArrowLeft,
+    ChevronLeft,
+    ChevronRight,
+    Euro,
 } from "lucide-react"
 import Link from "next/link"
 import { debugLog, isDebugEnabled } from "@/lib/debugLog"
+import { LoadingPage } from "@/components/loading-spinner"
+
 
 type Appointment = {
     id: number
@@ -184,6 +193,9 @@ export default function AppointmentsCalendarPage() {
         return { total, confirmed, pending, revenue }
     }, [appointments, currentDate])
 
+    if (loading) {
+        return <LoadingPage message="Chargement des rendez-vous…" variant="bars" size="md" />
+    }
     return (
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-sm border-b">

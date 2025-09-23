@@ -3,6 +3,7 @@ import { Globe } from "lucide-react"
 import LegalLayout from "@/components/legal-layout"
 
 export default function MentionsLegalesPage() {
+
     return (
         <LegalLayout
             label="Mentions légales"

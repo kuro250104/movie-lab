@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { LoadingPage } from "@/components/loading-spinner"
 
 
 type Service = { id: number; description:string; duration_minutes:number; name: string; price: number; is_active: boolean; color?: string }
@@ -185,21 +186,23 @@ export default function CoachesServicesPage() {
     const [openServiceModal, setOpenServiceModal] = useState(false)
     const [editingService, setEditingService] = useState<Service | null>(null)
 
+    const fetchAll = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const [srv, cch] = await Promise.all([api.getServices(), api.getCoaches()])
+            setServices(srv)
+            setCoaches(cch)
+        } catch (e: any) {
+            setError(e?.message ?? "Erreur inconnue")
+            console.error(e)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
-        (async () => {
-            try {
-                setLoading(true)
-                setError(null)
-                const [srv, cch] = await Promise.all([api.getServices(), api.getCoaches()])
-                setServices(srv)
-                setCoaches(cch)
-            } catch (e: any) {
-                setError(e?.message ?? "Erreur inconnue")
-                console.error(e)
-            } finally {
-                setLoading(false)
-            }
-        })()
+        fetchAll()
     }, [])
 
     const getStatusColor = (s: string) =>
@@ -331,6 +334,9 @@ export default function CoachesServicesPage() {
         }
     }
 
+    if (loading) {
+        return <LoadingPage message="Chargement des coachs & services…" variant="brand" size="md" />
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -369,6 +375,18 @@ export default function CoachesServicesPage() {
             </header>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
+                {error && (
+                    <Card className="mb-6 border-red-200">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <p className="text-sm text-red-700">Erreur : {error}</p>
+                                <Button variant="outline" size="sm" onClick={fetchAll}>
+                                    Réessayer
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
                 <Card className="mb-6">
                     <CardContent className="p-6">
                         <div className="flex flex-col md:flex-row gap-4">

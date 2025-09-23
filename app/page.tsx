@@ -9,6 +9,7 @@ import Link from "next/link"
 import {useOffers} from "@/hooks/use-offers";
 import {BookingModal} from "@/components/booking-modal";
 import {useState} from "react";
+import {LoadingPage} from "@/components/loading-spinner";
 
 
 
@@ -46,11 +47,9 @@ export default function Home() {
 
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-white text-black">
-                <p>Chargement des services...</p>
-            </div>
-        )
+        if (loading) {
+            return <LoadingPage message="Préparation de votre expérience MOVILAB..." variant="brand" size="md"/>
+        }
     }
     return (
         <main className="flex min-h-screen flex-col text-white">

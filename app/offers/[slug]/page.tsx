@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { BookingModal } from "@/components/booking-modal"
 import {ArrowLeft, Clock, Calendar, Target, Zap, Icon} from "lucide-react"
 import { sneaker } from '@lucide/lab';
@@ -18,6 +17,7 @@ import { LiaUserFriendsSolid } from "react-icons/lia";
 
 
 import type { ReactNode } from "react"
+import {LoadingPage} from "@/components/loading-spinner";
 
 type Service = {
     id: number
@@ -78,14 +78,10 @@ export default function OfferBySlugPage() {
         })()
     }, [slug])
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-white text-black">
-                <p>Chargement de l’offre...</p>
-            </div>
-        )
-    }
 
+    if (loading) {
+        return <LoadingPage message="Chargement de l'offre" variant="pulse" size="md"/>
+    }
     if (!service) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white text-black">
@@ -95,8 +91,12 @@ export default function OfferBySlugPage() {
     }
 
     const duration =
-        service.duration_minutes ?? service.durationMinute
+        service.duration_minutes ?? service.durationMinutes
     const price = Number(service.price ?? 0)
+
+
+
+
 
     return (
         <div className="min-h-screen bg-white">

@@ -104,11 +104,11 @@ export function SiteHeader() {
                                 <div className="pt-4 border-t border-gray-700 space-y-3">
                                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                                         <Phone className="w-4 h-4 text-orange-400"/>
-                                        <span>+33 (0)1 23 45 67 89</span>
+                                        <a href="tel:+33979219248">+33 9 79 21 92 48</a>
                                     </div>
                                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                                         <Mail className="w-4 h-4 text-orange-400"/>
-                                        <span>info@movi-lab.fr</span>
+                                        <a href="mailto:info@movi-lab.fr">info@movi-lab.fr</a>
                                     </div>
                                 </div>
                             </nav>

@@ -13,10 +13,25 @@ export const metadata: Metadata = {
     title: "Movi-Lab - Analyse 3D de la course",
     description: "Transforme tes défis en réussite, progresse en toute sérénité avec notre analyse 3D de pointe",
     icons: {
-        icon: "/favicon.ico",
+
+        icon: [
+            { url: "/favicon.ico", type: "image/x-icon" },
+            { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+            { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+            { url: "/favicon-96x96.png", sizes: "32x32", type: "image/png" },
+            { url: "/favicon.svg", type: "image/svg+xml" },
+        ],
+        apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png",  }],
+        shortcut: "/favicon.ico",
     },
+    appleWebApp: {
+        title: "Movi-Lab",
+        statusBarStyle: "default",
+        capable: true
+    },
+    manifest: "/site.webmanifest",
     openGraph: {
-        title: "Movi-Lab - Analyse 3D de la course",
+        title: "Movi-Lab | Analyse 3D de la course à pied à Toulouse - Performance & Prévention des blessures",
         description: "Transforme tes défis en réussite, progresse en toute sérénité avec notre analyse 3D de pointe",
         url: "https://movi-lab.fr",
         siteName: "Movi-Lab",
@@ -81,6 +96,8 @@ export default function RootLayout({
             "analyse 3D de la course",
             "prévention des blessures running",
             "bilan postural",
+            "movi lab",
+            "movi-lab",
             "amélioration de la performance sportive",
             "accompagnement sportif personnalisé"
         ]
