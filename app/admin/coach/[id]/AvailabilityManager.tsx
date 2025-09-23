@@ -8,6 +8,17 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Trash2, Plus, RefreshCw } from "lucide-react"
 
 type Rule = {
@@ -66,15 +77,16 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
     const [excEnd, setExcEnd] = useState("12:00")
     const [excNote, setExcNote] = useState<string>("")
 
+    // NEW: ids en attente de confirmation de suppression
+    const [toDeleteExceptionId, setToDeleteExceptionId] = useState<number | null>(null)
+    const [toDeleteRuleId, setToDeleteRuleId] = useState<number | null>(null)
+
     const base = useMemo(() => `/api/admin/coaches/${coachId}/availability`, [coachId])
 
     async function reloadAll() {
         setLoading(true)
         try {
-            const [r1, r2] = await Promise.all([
-                fetch(`${base}/rules`),
-                fetch(`${base}/exceptions`)
-            ])
+            const [r1, r2] = await Promise.all([fetch(`${base}/rules`), fetch(`${base}/exceptions`)])
             if (!r1.ok) throw new Error("load rules failed")
             if (!r2.ok) throw new Error("load exceptions failed")
 
@@ -138,7 +150,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
     }
 
     const deleteRule = async (ruleId: number) => {
-        if (!confirm("Supprimer cette règle ?")) return
         try {
             const r = await fetch(`${base}/rules/${ruleId}`, { method: "DELETE" })
             if (!r.ok) throw new Error("delete rule failed")
@@ -193,7 +204,6 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
     }
 
     const deleteException = async (excId: number) => {
-        if (!confirm("Supprimer cette exception ?")) return
         try {
             const r = await fetch(`${base}/exceptions/${excId}`, { method: "DELETE" })
             if (!r.ok) throw new Error("delete exception failed")
@@ -206,6 +216,7 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* Règles hebdomadaires */}
             <Card className="rounded-2xl shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-xl">Règles hebdomadaires</CardTitle>
@@ -214,17 +225,19 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-5">
+                    {/* Formulaire ajout */}
                     <div className="grid sm:grid-cols-5 gap-3 items-end">
                         <div className="sm:col-span-2">
                             <Label>Jour</Label>
-                            <Select
-                                value={String(ruleWeekday)}
-                                onValueChange={(v) => setRuleWeekday(Number(v))}
-                            >
-                                <SelectTrigger><SelectValue placeholder="Jour" /></SelectTrigger>
+                            <Select value={String(ruleWeekday)} onValueChange={(v) => setRuleWeekday(Number(v))}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Jour" />
+                                </SelectTrigger>
                                 <SelectContent>
                                     {WEEKDAYS.map((d) => (
-                                        <SelectItem key={d.value} value={String(d.value)}>{d.label}</SelectItem>
+                                        <SelectItem key={d.value} value={String(d.value)}>
+                                            {d.label}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -246,39 +259,68 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
                     <Separator />
 
+                    {/* Liste des règles */}
                     <div className="space-y-2">
                         {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
-                        {!loading && rules.length === 0 && (
-                            <p className="text-sm text-muted-foreground">Aucune règle pour l’instant.</p>
-                        )}
-                        {!loading && rules.map((r) => (
-                            <div key={r.id} className="flex items-center justify-between border rounded-xl p-3">
-                                <div>
-                                    <div className="font-medium">
-                                        {WEEKDAYS.find((d) => d.value === r.weekday)?.label}{" "}
-                                        <span className="text-muted-foreground">
-                                            ({toHHMM(r.startMinute)}–{toHHMM(r.endMinute)})
-                                        </span>
-                                        <div className="text-xs text-muted-foreground">
-                                            Créé le {new Date(r.createdAt ?? Date.now()).toLocaleString()}
+                        {!loading && rules.length === 0 && <p className="text-sm text-muted-foreground">Aucune règle pour l’instant.</p>}
+                        {!loading &&
+                            rules.map((r) => (
+                                <div key={r.id} className="flex items-center justify-between border rounded-xl p-3">
+                                    <div>
+                                        <div className="font-medium">
+                                            {WEEKDAYS.find((d) => d.value === r.weekday)?.label}{" "}
+                                            <span className="text-muted-foreground">
+                        ({toHHMM(r.startMinute)}–{toHHMM(r.endMinute)})
+                      </span>
+                                            <div className="text-xs text-muted-foreground">Créé le {new Date(r.createdAt ?? Date.now()).toLocaleString()}</div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm">Actif</span>
-                                        <Switch checked={r.isActive} onCheckedChange={() => toggleRule(r)} />
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm">Actif</span>
+                                            <Switch checked={r.isActive} onCheckedChange={() => toggleRule(r)} />
+                                        </div>
+
+                                        {/* Bouton supprimer avec modal */}
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => setToDeleteRuleId(r.id)}
+                                                    title="Supprimer cette règle"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Supprimer cette règle ?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Cette action est irréversible et retirera cette règle de vos disponibilités.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                        onClick={() => {
+                                                            if (toDeleteRuleId != null) deleteRule(toDeleteRuleId)
+                                                        }}
+                                                    >
+                                                        Confirmer
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
-                                    <Button variant="outline" size="icon" onClick={() => deleteRule(r.id)}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </CardContent>
             </Card>
 
+            {/* Exceptions ponctuelles */}
             <Card className="rounded-2xl shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-xl">Exceptions ponctuelles</CardTitle>
@@ -300,7 +342,9 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                                     setExcWholeDayBlocked(!avail)
                                 }}
                             >
-                                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Type" />
+                                </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="window">Fenêtre disponible</SelectItem>
                                     <SelectItem value="blocked">Journée bloquée</SelectItem>
@@ -323,7 +367,9 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
                             <>
                                 <div className="sm:col-span-2">
                                     <Label>Bloqué toute la journée</Label>
-                                    <div className="h-10 flex items-center"><span className="text-sm text-muted-foreground">Oui</span></div>
+                                    <div className="h-10 flex items-center">
+                                        <span className="text-sm text-muted-foreground">Oui</span>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -344,27 +390,56 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
 
                     <div className="space-y-2">
                         {loading && <p className="text-sm text-muted-foreground">Chargement…</p>}
-                        {!loading && exceptions.length === 0 && (
-                            <p className="text-sm text-muted-foreground">Aucune exception pour l’instant.</p>
-                        )}
-                        {!loading && exceptions.map((e) => (
-                            <div key={e.id} className="flex items-center justify-between border rounded-xl p-3">
-                                <div className="space-y-0.5">
-                                    <div className="font-medium">{formatDate(e.date)}</div>
-                                    {e.is_available ? (
-                                        <div className="text-sm text-muted-foreground">
-                                            Disponible {toHHMM(e.start_minute ?? 0)}–{toHHMM(e.end_minute ?? 0)}
-                                        </div>
-                                    ) : (
-                                        <div className="text-sm text-muted-foreground">Journée bloquée</div>
-                                    )}
-                                    {e.note && <div className="text-xs text-muted-foreground">Note : {e.note}</div>}
+                        {!loading && exceptions.length === 0 && <p className="text-sm text-muted-foreground">Aucune exception pour l’instant.</p>}
+                        {!loading &&
+                            exceptions.map((e) => (
+                                <div key={e.id} className="flex items-center justify-between border rounded-xl p-3">
+                                    <div className="space-y-0.5">
+                                        <div className="font-medium">{formatDate(e.date)}</div>
+                                        {e.is_available ? (
+                                            <div className="text-sm text-muted-foreground">
+                                                Disponible {toHHMM(e.start_minute ?? 0)}–{toHHMM(e.end_minute ?? 0)}
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm text-muted-foreground">Journée bloquée</div>
+                                        )}
+                                        {e.note && <div className="text-xs text-muted-foreground">Note : {e.note}</div>}
+                                    </div>
+
+                                    {/* Bouton supprimer avec modal */}
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={() => setToDeleteExceptionId(e.id)}
+                                                title="Supprimer cette exception"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Supprimer cette exception ?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Cette action est irréversible et retirera cette exception de vos disponibilités.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    className="bg-red-600 hover:bg-red-700"
+                                                    onClick={() => {
+                                                        if (toDeleteExceptionId != null) deleteException(toDeleteExceptionId)
+                                                    }}
+                                                >
+                                                    Confirmer
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
-                                <Button variant="outline" size="icon" onClick={() => deleteException(e.id)}>
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </CardContent>
             </Card>
@@ -372,11 +447,9 @@ export function AvailabilityManager({ coachId }: { coachId: number }) {
     )
 }
 
-const sortRules = (a: Rule, b: Rule) =>
-    a.weekday - b.weekday || a.startMinute - b.startMinute
+const sortRules = (a: Rule, b: Rule) => a.weekday - b.weekday || a.startMinute - b.startMinute
 
-const sortExceptions = (a: Exception, b: Exception) =>
-    (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
+const sortExceptions = (a: Exception, b: Exception) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)
 
 function formatDate(d: string) {
     if (!d) return "—"

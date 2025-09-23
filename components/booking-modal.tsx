@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,11 +34,116 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         notes: "Pas de commentaire.",            // 👈 valeur par défaut
     })
 
+    // ----- RULES (business opening hours, lead time, etc.) -----
+    const RULES = {
+        openingHours: {
+            // 0=Dimanche, 1=Lundi, ... 6=Samedi
+            1: [],
+            2: [],
+            3: [],
+            4: [],
+            5: [["14:00","17:00"]],
+            6: [["09:00","12:00"]],
+            0: [],
+        } as Record<number, string[][]>,
+        minLeadHours: 12,
+        maxAdvanceDays: 60,
+        bufferMinutes: 60,
+        blackoutDates: new Set<string>([
+            // "2025-12-25"
+        ]),
+    }
+
+    // ----- Time helpers -----
+    const toMinutes = (hhmm: string) => {
+        const [h, m] = hhmm.split(":").map(Number)
+        return h * 60 + (m || 0)
+    }
+    const fromMinutes = (min: number) => {
+        const h = Math.floor(min / 60)
+        const m = min % 60
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+    }
+
+    const isDateAllowed = (dateStr: string) => {
+        if (!dateStr) return false
+        if (RULES.blackoutDates.has(dateStr)) return false
+        const d = new Date(`${dateStr}T00:00:00`)
+        const dow = d.getDay()
+        const ranges = RULES.openingHours[dow] ?? []
+        if (!ranges.length) return false
+        const now = new Date()
+        const minAllowed = new Date(now.getTime() + RULES.minLeadHours * 60 * 60 * 1000)
+        if (new Date(`${dateStr}T23:59:59`) < minAllowed) return false
+        const maxAdvance = new Date()
+        maxAdvance.setDate(maxAdvance.getDate() + RULES.maxAdvanceDays)
+        if (d > maxAdvance) return false
+        return true
+    }
+
+    const buildSlotsForDate = (dateStr: string, durationMin: number) => {
+        if (!isDateAllowed(dateStr)) return []
+        const d = new Date(`${dateStr}T00:00:00`)
+        const dow = d.getDay()
+        const ranges = RULES.openingHours[dow] ?? []
+        const slots: string[] = []
+        const now = new Date()
+        for (const [start, end] of ranges) {
+            const startMin = toMinutes(start)
+            const endMin = toMinutes(end)
+            let t = startMin
+            while (t + durationMin <= endMin) {
+                const slot = fromMinutes(t)
+                const slotDT = new Date(`${dateStr}T${slot}:00`)
+                if (slotDT.getTime() >= now.getTime() + RULES.minLeadHours * 60 * 60 * 1000) {
+                    slots.push(slot)
+                }
+                t += Math.max(5, RULES.bufferMinutes)
+            }
+        }
+        return slots
+    }
+
+    // ----- Availability state -----
+    const [slots, setSlots] = useState<string[]>([])
+    const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set())
+    const [loadingSlots, setLoadingSlots] = useState(false)
+
+
+    const refreshSlots = async (dateStr: string) => {
+        setLoadingSlots(true)
+        try {
+            const all = buildSlotsForDate(dateStr, selectedService.duration_minutes)
+            let taken: string[] = []
+            try {
+                const res = await fetch(`/api/public/availability?date=${dateStr}&serviceId=${selectedService.id}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    taken = Array.isArray(data?.taken) ? data.taken : []
+                }
+            } catch {}
+            setTakenSlots(new Set(taken))
+            setSlots(all)
+            if (formData.appointmentTime && (!all.includes(formData.appointmentTime) || taken.includes(formData.appointmentTime))) {
+                setFormData(prev => ({ ...prev, appointmentTime: "" }))
+            }
+        } finally {
+            setLoadingSlots(false)
+        }
+    }
+
+    // (Optional) reload slots if service changes while a date is selected
+    useEffect(() => {
+        if (formData.appointmentDate) {
+            refreshSlots(formData.appointmentDate)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedService.id, selectedService.duration_minutes])
+
     const handleInputChange = (field: string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
-    // Construit un ISO avec le décalage local (+02:00, etc.)
     const buildStartsAtWithOffset = (date: string, time: string) => {
         const local = new Date(`${date}T${time}:00`)
         const offsetMin = -local.getTimezoneOffset()
@@ -53,6 +158,17 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         const missing = requiredFields.filter((f) => !formData[f as keyof typeof formData])
         if (missing.length > 0) {
             alert("Veuillez remplir tous les champs obligatoires.")
+            return
+        }
+
+        // Final validation against business rules and availability
+        if (!isDateAllowed(formData.appointmentDate)) {
+            alert("La date choisie n'est pas disponible.")
+            return
+        }
+        const allSlots = buildSlotsForDate(formData.appointmentDate, selectedService.duration_minutes)
+        if (!allSlots.includes(formData.appointmentTime) || takenSlots.has(formData.appointmentTime)) {
+            alert("Le créneau choisi n'est plus disponible. Merci d'en sélectionner un autre.")
             return
         }
 
@@ -191,7 +307,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                 />
                             </div>
 
-                            {/* 👇 Nouvelle zone Notes */}
                             <div>
                                 <Label htmlFor="notes">Notes (optionnel)</Label>
                                 <Textarea
@@ -227,35 +342,64 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                         id="appointmentDate"
                                         type="date"
                                         value={formData.appointmentDate}
-                                        onChange={(e) => handleInputChange("appointmentDate", e.target.value)}
+                                        onChange={async (e) => {
+                                            const v = e.target.value
+                                            handleInputChange("appointmentDate", v)
+                                            if (!isDateAllowed(v)) {
+                                                setSlots([])
+                                                setTakenSlots(new Set())
+                                                setFormData(prev => ({ ...prev, appointmentTime: "" }))
+                                                return
+                                            }
+                                            await refreshSlots(v)
+                                        }}
                                         min={new Date().toISOString().split("T")[0]}
                                         required
+                                        className={!formData.appointmentDate || isDateAllowed(formData.appointmentDate) ? "" : "border-red-500"}
                                     />
+                                    {formData.appointmentDate && !isDateAllowed(formData.appointmentDate) && (
+                                        <p className="text-xs text-red-600 mt-1">Date indisponible (jour fermé, délai minimum, ou trop lointain).</p>
+                                    )}
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        * Règles: délai min {RULES.minLeadHours}h, avance max {RULES.maxAdvanceDays} jours, week-end fermé.
+                                    </p>
                                 </div>
                                 <div>
                                     <Label htmlFor="appointmentTime">Heure *</Label>
                                     <Select
                                         value={formData.appointmentTime}
                                         onValueChange={(value) => handleInputChange("appointmentTime", value)}
+                                        disabled={loadingSlots || slots.length === 0}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Choisir un créneau" />
+                                            <SelectValue placeholder={loadingSlots ? "Chargement..." : "Choisir un créneau"} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"].map((time) => (
-                                                <SelectItem key={time} value={time}>
+                                            {slots.map((time) => (
+                                                <SelectItem
+                                                    key={time}
+                                                    value={time}
+                                                    disabled={(Array.isArray(takenSlots) ? takenSlots : []).includes(time)}
+                                                >
                                                     {time}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    {slots.length === 0 && !loadingSlots && (
+                                        <p className="text-sm text-gray-500 mt-1">Aucun créneau disponible pour cette date.</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex justify-between">
                                 <Button variant="outline" onClick={() => setStep(1)}>
                                     Retour
                                 </Button>
-                                <Button onClick={() => setStep(3)} className="bg-orange-600 hover:bg-orange-700">
+                                <Button
+                                    onClick={() => setStep(3)}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                    disabled={!formData.appointmentDate || !formData.appointmentTime || !isDateAllowed(formData.appointmentDate)}
+                                >
                                     Continuer <ChevronRight className="w-4 h-4 ml-2" />
                                 </Button>
                             </div>

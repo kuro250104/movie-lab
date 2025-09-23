@@ -4,9 +4,12 @@ import type { NextRequest } from "next/server"
 import { sql } from "@/lib/db"
 import { sendMail } from "@/lib/mailer"
 
+export const runtime = "nodejs"
+
+const BUFFER_MINUTES = 10
+
 const nn = <T>(v: T | undefined | null) => (v === undefined ? null : v)
 
-// assert: pas undefined (et log clair si c'est le cas)
 function must<T>(v: T | undefined, label: string): T {
     if (v === undefined) {
         console.error(`[BOOKING] '${label}' is undefined`)
@@ -59,7 +62,6 @@ export async function POST(req: NextRequest) {
         }
         const clientId = clientRows[0].id as number
 
-        // 2) Service + infos utiles
         const svcRows = await sql/* sql */`
             SELECT
                 id               AS "id",
@@ -89,7 +91,38 @@ export async function POST(req: NextRequest) {
             svcId, svcDuration, fullName, startIso, endIsoOrNull, emailSafe
         })
 
-        // 2b) Créer la demande
+        // Anti-double-booking: check overlap against existing appointments before creating the request
+        try {
+            const overlapCheck = await sql/* sql */`
+              WITH input AS (
+                SELECT
+                  ${svcId}::int                                                AS service_id,
+                  ${startIso}::timestamptz                                     AS starts_at,
+                  COALESCE(
+                    ${endIsoOrNull}::timestamptz,
+                    (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))
+                  ) + make_interval(mins => ${BUFFER_MINUTES})                 AS ends_at
+              )
+              SELECT COUNT(*)::int AS "count"
+              FROM public.appointments a
+              JOIN input i ON i.service_id = a.service_id
+              WHERE a.status IN ('scheduled','confirmed')
+                AND tstzrange(a.starts_at, a.ends_at, '[)') &&
+                    tstzrange(i.starts_at, i.ends_at, '[)');
+            `
+
+            if ((overlapCheck?.[0]?.count ?? 0) > 0) {
+                return NextResponse.json(
+                    { error: "Ce créneau n'est plus disponible. Merci de choisir un autre horaire." },
+                    { status: 409 }
+                )
+            }
+        } catch (e) {
+            console.error("[BOOKING] SQL error at overlap check", e)
+            // En cas d'erreur DB ici, on préfère échouer explicitement plutôt que de créer une demande conflictuelle
+            return NextResponse.json({ error: "Erreur de vérification de disponibilité" }, { status: 500 })
+        }
+
         let requestRows
         try {
             requestRows = await sql/* sql */`
@@ -118,7 +151,6 @@ export async function POST(req: NextRequest) {
         const reqRow = requestRows[0]
         const requestId = reqRow.id as number
 
-        // 3) Chercher les coachs dispos
         let candidates: Array<{ coachId: number; email: string }>
         try {
             candidates = await sql/* sql */`
