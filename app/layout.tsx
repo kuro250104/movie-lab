@@ -5,6 +5,8 @@ import "./globals.css"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -111,12 +113,13 @@ export default function RootLayout({
                 type="application/ld+json"
                 strategy="afterInteractive"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
-            />
+            /><title>Movi-Lab - Analyse 3D de la course</title>
         </head>
         <body className={inter.className}>
-        <SiteHeader />
+        <SiteHeader/>
         {children}
         <Analytics />
+        <SpeedInsights />
         <SiteFooter />
         </body>
         </html>
