@@ -22,7 +22,7 @@ export async function GET(
             const alt = await sql/*sql*/`
         SELECT id, name, description, price, duration_minutes, is_active, color, slug
         FROM services
-        WHERE lower(regexp_replace(name, '[^a-z0-9]+', '-', 'g')) = ${slug}
+        WHERE trim(both '-' from lower(regexp_replace(name, '[^a-z0-9]+', '-', 'g'))) = ${slug}
         LIMIT 1
       `
             service = alt[0]
@@ -31,12 +31,6 @@ export async function GET(
         if (!service) {
             return NextResponse.json({ error: "Not found" }, { status: 404 })
         }
-
-        // (Optionnel) bloquer les services inactifs
-        // if (!service.is_active) {
-        //   return NextResponse.json({ error: "Not found" }, { status: 404 })
-        // }
-
 
         const items = await sql/*sql*/`
       SELECT id, icon, title, description

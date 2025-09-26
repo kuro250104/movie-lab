@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {Users, Search, Plus, Edit, Trash2, ArrowLeft, Settings, Target} from "lucide-react"
+import { Users, Search, Plus, Edit, Trash2, ArrowLeft, Settings, Target } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 
+type ServiceItem = { id?: number; service_id?: number; icon: string; title: string; description?: string }
 type Service = {
     id: number
     name: string
@@ -20,7 +21,9 @@ type Service = {
     duration_minutes: number
     is_active: boolean
     color?: string
+    items?: ServiceItem[]
 }
+
 const api = {
     async getServices(): Promise<Service[]> {
         const res = await fetch("/api/admin/services", { credentials: "include" })
@@ -34,6 +37,15 @@ const api = {
             duration_minutes: r.duration_minutes ?? r.durationMinutes ?? 60,
             is_active: Boolean(r.is_active ?? r.isActive ?? r.active),
             color: r.color ?? "bg-gray-500",
+            items: Array.isArray(r.items)
+                ? r.items.map((it: any) => ({
+                    id: it.id,
+                    service_id: it.service_id,
+                    icon: String(it.icon ?? "").trim(),
+                    title: String(it.title ?? "").trim(),
+                    description: String(it.description ?? ""), // NEW
+                }))
+                : [],
         }))
     },
 
@@ -45,6 +57,13 @@ const api = {
             duration_minutes: payload.duration_minutes ?? 60,
             is_active: payload.is_active ?? true,
             color: payload.color ?? "bg-gray-500",
+            items: (payload.items ?? [])
+                .filter((i) => i && i.icon && i.title)
+                .map((i) => ({
+                    icon: i.icon,
+                    title: i.title,
+                    description: i.description ?? "", // NEW
+                })),
         }
         const res = await fetch("/api/admin/services", {
             method: "POST",
@@ -64,6 +83,13 @@ const api = {
             duration_minutes: payload.duration_minutes,
             is_active: payload.is_active,
             color: payload.color,
+            items: (payload.items ?? [])
+                .filter((i) => i && i.icon && i.title)
+                .map((i) => ({
+                    icon: i.icon,
+                    title: i.title,
+                    description: i.description ?? "", // NEW
+                })),
         }
         const res = await fetch(`/api/admin/services/${id}`, {
             method: "PATCH",
@@ -111,18 +137,18 @@ export default function CoachesServicesPage() {
     }, [])
 
     const filteredServices = useMemo(() => {
-          const term = searchTerm.trim().toLowerCase()
-              return services.filter((s) => {
-                    if (!term) return true
-                        return (
-                             s.name.toLowerCase().includes(term) ||
-                             s.description.toLowerCase().includes(term) ||
-                              String(s.price).toLowerCase().includes(term) ||
-                             String(s.duration_minutes).toLowerCase().includes(term) ||
-                             (s.color?.toLowerCase().includes(term) ?? false)
-                            )
-                      })
-            }, [services, searchTerm])
+        const term = searchTerm.trim().toLowerCase()
+        return services.filter((s) => {
+            if (!term) return true
+            return (
+                s.name.toLowerCase().includes(term) ||
+                s.description.toLowerCase().includes(term) ||
+                String(s.price).toLowerCase().includes(term) ||
+                String(s.duration_minutes).toLowerCase().includes(term) ||
+                (s.color?.toLowerCase().includes(term) ?? false)
+            )
+        })
+    }, [services, searchTerm])
 
     const openNewService = () => {
         setEditingService({
@@ -133,12 +159,13 @@ export default function CoachesServicesPage() {
             duration_minutes: 60,
             is_active: true,
             color: "bg-gray-500",
+            items: [], // NEW
         })
         setOpenServiceModal(true)
     }
 
     const openEditService = (s: Service) => {
-        setEditingService({ ...s })
+        setEditingService({ ...s, items: s.items ?? [] })
         setOpenServiceModal(true)
     }
 
@@ -174,6 +201,27 @@ export default function CoachesServicesPage() {
             setLoading(false)
         }
     }
+
+    // ---- Items UI helpers (sans position) ----
+    const addItem = () =>
+        setEditingService((prev) =>
+            prev ? { ...prev, items: [...(prev.items ?? []), { icon: "", title: "", description: "" }] } : prev
+        )
+
+    const updateItem = (idx: number, patch: Partial<ServiceItem>) =>
+        setEditingService((prev) => {
+            if (!prev) return prev
+            const items = [...(prev.items ?? [])]
+            items[idx] = { ...items[idx], ...patch }
+            return { ...prev, items }
+        })
+
+    const removeItem = (idx: number) =>
+        setEditingService((prev) => {
+            if (!prev) return prev
+            const items = (prev.items ?? []).filter((_, i) => i !== idx)
+            return { ...prev, items }
+        })
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -233,6 +281,23 @@ export default function CoachesServicesPage() {
                                             <div>
                                                 <h3 className="text-xl font-semibold text-gray-900">{s.name}</h3>
                                                 {s.description && <p className="mt-2 text-sm text-gray-600">{s.description}</p>}
+
+                                                {/* Aperçu des items */}
+                                                {(s.items?.length ?? 0) > 0 && (
+                                                    <ul className="mt-3 space-y-1 text-sm text-gray-700">
+                                                        {s.items!.map((it, i) => (
+                                                            <li key={`${it.id ?? i}-${it.title}`} className="flex items-start gap-2">
+                                                                <span className="opacity-70 mt-0.5">{it.icon}</span>
+                                                                <div>
+                                                                    <span className="font-medium">{it.title}</span>
+                                                                    {it.description ? (
+                                                                        <span className="block text-gray-600">{it.description}</span>
+                                                                    ) : null}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </div>
                                             <div className="flex gap-2">
                                                 <Badge className={s.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
@@ -272,7 +337,9 @@ export default function CoachesServicesPage() {
                         <CardContent className="p-12 text-center">
                             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun service trouvé</h3>
-                            <p className="text-gray-600 mb-4">{searchTerm ? "Modifiez votre recherche" : "Ajoutez votre premier service"}</p>
+                            <p className="text-gray-600 mb-4">
+                                {searchTerm ? "Modifiez votre recherche" : "Ajoutez votre premier service"}
+                            </p>
                             <Button className="bg-orange-600 hover:bg-orange-700" onClick={openNewService}>
                                 <Plus className="w-4 h-4 mr-2" /> Ajouter un service
                             </Button>
@@ -311,12 +378,7 @@ export default function CoachesServicesPage() {
                                     type="number"
                                     min={0}
                                     value={editingService.price}
-                                    onChange={(e) =>
-                                        setEditingService({
-                                            ...editingService,
-                                            price: Number(e.target.value),
-                                        })
-                                    }
+                                    onChange={(e) => setEditingService({ ...editingService, price: Number(e.target.value) })}
                                 />
                             </div>
 
@@ -327,10 +389,7 @@ export default function CoachesServicesPage() {
                                     min={1}
                                     value={editingService.duration_minutes}
                                     onChange={(e) =>
-                                        setEditingService({
-                                            ...editingService,
-                                            duration_minutes: Number(e.target.value),
-                                        })
+                                        setEditingService({ ...editingService, duration_minutes: Number(e.target.value) })
                                     }
                                 />
                             </div>
@@ -352,6 +411,46 @@ export default function CoachesServicesPage() {
                                         <SelectItem value="bg-gray-500">Gris</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            {/* ---- Items (icône + titre + description) ---- */}
+                            <div className="pt-2">
+                                <div className="flex items-center justify-between">
+                                    <Label>Items</Label>
+                                    <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                                        <Plus className="w-4 h-4 mr-1" /> Ajouter un item
+                                    </Button>
+                                </div>
+                                <div className="mt-2 space-y-2">
+                                    {(editingService.items ?? []).map((it, idx) => (
+                                        <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start border rounded p-2">
+                                            <div className="md:col-span-3">
+                                                <Label className="text-xs">Icône</Label>
+                                                <Input value={it.icon} onChange={(e) => updateItem(idx, { icon: e.target.value })} />
+                                            </div>
+                                            <div className="md:col-span-4">
+                                                <Label className="text-xs">Titre</Label>
+                                                <Input value={it.title} onChange={(e) => updateItem(idx, { title: e.target.value })} />
+                                            </div>
+                                            <div className="md:col-span-4">
+                                                <Label className="text-xs">Description</Label>
+                                                <Input
+                                                    placeholder="(facultatif)"
+                                                    value={it.description ?? ""}
+                                                    onChange={(e) => updateItem(idx, { description: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-1 flex justify-end">
+                                                <Button type="button" variant="outline" size="icon" onClick={() => removeItem(idx)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(editingService.items?.length ?? 0) === 0 && (
+                                        <p className="text-sm text-gray-500">Aucun item. Cliquez sur “Ajouter un item”.</p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-2">

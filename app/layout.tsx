@@ -94,15 +94,36 @@ export default function RootLayout({
             "https://www.instagram.com/movilab__/",
         ],
         knowsAbout: [
+            "course à pied 3D",
+            "analyse biomécanique",
+            "analyse posturale",
+            "analyse 3D course à pied",
             "analyse biomécanique Toulouse",
-            "analyse 3D de la course",
+
             "prévention des blessures running",
-            "bilan postural",
+            "douleurs course à pied",
+            "blessures sportives",
+            "courir sans se blesser",
+
+            "performance course à pied",
+            "coaching course à pied",
+            "progresser en course à pied",
+            "préparation marathon",
+            "courir longtemps",
+            "amélioration de la performance sportive",
+            "accompagnement sportif personnalisé",
+
+            "motion capture running",
+            "sport analytics",
+            "technologie de course",
+            "chaussures running adaptées",
+
             "movi lab",
             "movi-lab",
-            "amélioration de la performance sportive",
-            "accompagnement sportif personnalisé"
-        ]
+            "movilab",
+            "MoviLab",
+            "bilan postural Toulouse",
+        ],
     }
 
     return (

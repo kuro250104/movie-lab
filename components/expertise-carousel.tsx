@@ -72,7 +72,6 @@ export function ExpertiseCarousel() {
         ))}
       </div>
 
-      {/* Mobile/Tablet Carousel View */}
       <div className="lg:hidden">
         <div className="relative overflow-hidden rounded-2xl">
           <AnimatePresence mode="wait">
