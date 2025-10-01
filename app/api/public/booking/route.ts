@@ -1,4 +1,3 @@
-// app/api/public/booking/route.ts
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { sql } from "@/lib/db"
@@ -27,7 +26,10 @@ export async function POST(req: NextRequest) {
         const lastName  = nn(body?.lastName)
         const email     = nn(body?.email)
         const phone     = nn(body?.phone)
-        const serviceId = nn(body?.serviceId)
+
+        // 🔒 normaliser l’id service reçu (string|number) -> number
+        const serviceId = body?.serviceId != null ? Number(body.serviceId) : null
+
         const startsAt  = nn(body?.startsAt)
         const endsAt    = nn(body?.endsAt)
         const notes     = nn(body?.notes)
@@ -42,26 +44,23 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        let clientRows
-        try {
-            clientRows = await sql/* sql */`
-                WITH upsert_client AS (
-                INSERT INTO public.clients (first_name, last_name, email, phone)
-                SELECT ${must(firstName, "firstName")}, ${must(lastName, "lastName")}, ${must(email, "email")}, ${nn(phone)}
-                    WHERE NOT EXISTS (SELECT 1 FROM public.clients WHERE lower(email) = lower(${must(email, "email")}))
-                    RETURNING id
-                    )
-                SELECT id FROM upsert_client
-                UNION ALL
-                SELECT id FROM public.clients WHERE lower(email) = lower(${must(email, "email")})
-                    LIMIT 1;
-            `
-        } catch (e) {
-            console.error("[BOOKING] SQL error at step 1 (upsert client)", e)
-            throw e
-        }
-        const clientId = clientRows[0].id as number
+        // 1) Upsert client (pas d’ID injecté ici)
+        const clientRows = await sql/* sql */`
+      WITH upsert_client AS (
+        INSERT INTO public.clients (first_name, last_name, email, phone)
+        SELECT ${must(firstName,"firstName")}, ${must(lastName,"lastName")}, ${must(email,"email")}, ${nn(phone)}
+        WHERE NOT EXISTS (SELECT 1 FROM public.clients WHERE lower(email) = lower(${must(email,"email")}))
+        RETURNING id
+      )
+      SELECT id FROM upsert_client
+      UNION ALL
+      SELECT id FROM public.clients WHERE lower(email) = lower(${must(email,"email")})
+      LIMIT 1;
+    `
+        // ⚠️ si la colonne est bigint, clientRows[0].id peut être string → on normalise
+        const clientId = Number(clientRows[0].id)
 
+        // 2) Service
         const svcRows = await sql/* sql */`
             SELECT
                 id               AS "id",
@@ -70,7 +69,7 @@ export async function POST(req: NextRequest) {
                 is_active        AS "isActive",
                 name             AS "name"
             FROM public.services
-            WHERE id = ${must(serviceId, "serviceId")}
+            WHERE id = ${serviceId}::bigint
         `
         const svc = svcRows[0]
         if (!svc || !svc.isActive) {
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Service duration missing" }, { status: 400 })
         }
 
-        const svcId        = svc.id as number
+        const svcId        = Number(svc.id)                     // ✅ normalisé
         const svcDuration  = Number(svc.durationMinutes)
         const fullName     = `${must(firstName,"firstName")} ${must(lastName,"lastName")}`
         const startIso     = must(startsAt, "startsAt")
@@ -91,181 +90,154 @@ export async function POST(req: NextRequest) {
             svcId, svcDuration, fullName, startIso, endIsoOrNull, emailSafe
         })
 
-        // Anti-double-booking: check overlap against existing appointments before creating the request
-        try {
-            const overlapCheck = await sql/* sql */`
-              WITH input AS (
-                SELECT
-                  ${svcId}::int                                                AS service_id,
-                  ${startIso}::timestamptz                                     AS starts_at,
-                  COALESCE(
-                    ${endIsoOrNull}::timestamptz,
-                    (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))
-                  ) + make_interval(mins => ${BUFFER_MINUTES})                 AS ends_at
-              )
-              SELECT COUNT(*)::int AS "count"
-              FROM public.appointments a
-              JOIN input i ON i.service_id = a.service_id
-              WHERE a.status IN ('scheduled','confirmed')
-                AND tstzrange(a.starts_at, a.ends_at, '[)') &&
-                    tstzrange(i.starts_at, i.ends_at, '[)');
-            `
-
-            if ((overlapCheck?.[0]?.count ?? 0) > 0) {
-                return NextResponse.json(
-                    { error: "Ce créneau n'est plus disponible. Merci de choisir un autre horaire." },
-                    { status: 409 }
-                )
-            }
-        } catch (e) {
-            console.error("[BOOKING] SQL error at overlap check", e)
-            // En cas d'erreur DB ici, on préfère échouer explicitement plutôt que de créer une demande conflictuelle
-            return NextResponse.json({ error: "Erreur de vérification de disponibilité" }, { status: 500 })
+        // 3) Anti-overlap (pas d’ID, OK)
+        const overlapCheck = await sql/* sql */`
+      WITH input AS (
+        SELECT
+          ${svcId}::bigint                                             AS service_id,
+          ${startIso}::timestamptz                                     AS starts_at,
+          COALESCE(
+            ${endIsoOrNull}::timestamptz,
+            (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))
+          ) + make_interval(mins => ${BUFFER_MINUTES})                 AS ends_at
+      )
+      SELECT COUNT(*)::int AS "count"
+      FROM public.appointments a
+      JOIN input i ON i.service_id = a.service_id
+      WHERE a.status IN ('scheduled','confirmed')
+        AND tstzrange(a.starts_at, a.ends_at, '[)') &&
+            tstzrange(i.starts_at, i.ends_at, '[)');
+    `
+        if ((overlapCheck?.[0]?.count ?? 0) > 0) {
+            return NextResponse.json(
+                { error: "Ce créneau n'est plus disponible. Merci de choisir un autre horaire." },
+                { status: 409 }
+            )
         }
 
-        let requestRows
-        try {
-            requestRows = await sql/* sql */`
-                INSERT INTO public.appointment_requests (
-                    service_id, customer_name, customer_email, timezone, starts_at, ends_at, status
-                )
-                VALUES (
-                           ${svcId},
-                           ${fullName},
-                           ${emailSafe},
-                           'Europe/Paris',
-                           ${startIso}::timestamptz,
-                           COALESCE(${endIsoOrNull}::timestamptz, (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))),
-                           'pending'
-                       )
-                    RETURNING
-          id,
-          service_id AS "serviceId",
-          starts_at  AS "startsAt",
-          ends_at    AS "endsAt";
-            `
-        } catch (e) {
-            console.error("[BOOKING] SQL error at step 2 (insert appointment_request)", e)
-            throw e
-        }
+        // 4) Créer la request (status text check ok: 'pending')
+        const requestRows = await sql/* sql */`
+      INSERT INTO public.appointment_requests (
+        service_id, customer_name, customer_email, timezone, starts_at, ends_at, status
+      )
+      VALUES (
+        ${svcId}::bigint,
+        ${fullName},
+        ${emailSafe},
+        'Europe/Paris',
+        ${startIso}::timestamptz,
+        COALESCE(${endIsoOrNull}::timestamptz, (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))),
+        'pending'
+      )
+      RETURNING
+        id,
+        service_id AS "serviceId",
+        starts_at  AS "startsAt",
+        ends_at    AS "endsAt";
+    `
         const reqRow = requestRows[0]
-        const requestId = reqRow.id as number
+        const requestId = Number(reqRow.id)                     // ✅ normalisé
 
-        let candidates: Array<{ coachId: number; email: string }>
-        try {
-            candidates = await sql/* sql */`
-                WITH input AS (
-                    SELECT
-                        ${must(reqRow.serviceId, "reqRow.serviceId")}::int        AS service_id,
-                        ${must(reqRow.startsAt, "reqRow.startsAt")}::timestamptz  AS starts_at,
-                        ${must(reqRow.endsAt, "reqRow.endsAt")}::timestamptz      AS ends_at
-                ),
-                     base AS (
-                         SELECT
-                             c.id AS coach_id,
-                             c.email,
-                             COALESCE(NULLIF(c.timezone,''),'Europe/Paris') AS tz
-                         FROM public.coaches c
-                                  JOIN public.coach_services cs ON cs.coach_id = c.id
-                                  JOIN input i ON i.service_id = cs.service_id
-                         WHERE c.is_active = true
-                     ),
-                     local_times AS (
-                         SELECT
-                             b.*,
-                             EXTRACT(DOW FROM (i.starts_at AT TIME ZONE b.tz))::int        AS dow,
-                             (EXTRACT(HOUR FROM (i.starts_at AT TIME ZONE b.tz))*60
-                                 + EXTRACT(MINUTE FROM (i.starts_at AT TIME ZONE b.tz)))::int AS start_min,
-                             (EXTRACT(HOUR FROM (i.ends_at   AT TIME ZONE b.tz))*60
-                                 + EXTRACT(MINUTE FROM (i.ends_at   AT TIME ZONE b.tz)))::int AS end_min,
-                             (i.starts_at AT TIME ZONE b.tz)::date AS local_date,
-                             i.starts_at, i.ends_at
-                         FROM base b, input i
-                     ),
-                     allowed_by_exception AS (
-                         SELECT l.coach_id
-                         FROM local_times l
-                                  JOIN public.coach_availability_exceptions e
-                                       ON e.coach_id = l.coach_id
-                                           AND e.date = l.local_date
-                                           AND e.is_available = true
-                                           AND e.start_minute <= l.start_min
-                                           AND e.end_minute   >= l.end_min
-                     ),
-                     allowed_by_rules AS (
-                         SELECT DISTINCT l.coach_id
-                         FROM local_times l
-                                  JOIN public.coach_availability_rules r
-                                       ON r.coach_id = l.coach_id
-                                           AND r.is_active = true
-                                           AND r.weekday = l.dow
-                                           AND r.start_minute <= l.start_min
-                                           AND r.end_minute   >= l.end_min
-                         WHERE NOT EXISTS (
-                             SELECT 1 FROM public.coach_availability_exceptions e
-                             WHERE e.coach_id = l.coach_id AND e.date = l.local_date
-                         )
-                     ),
-                     time_ok AS (
-                         SELECT coach_id FROM allowed_by_exception
-                         UNION
-                         SELECT coach_id FROM allowed_by_rules
-                     ),
-                     not_overlapping AS (
-                         SELECT l.coach_id, l.email
-                         FROM local_times l
-                                  JOIN time_ok t USING (coach_id)
-                         WHERE NOT EXISTS (
-                             SELECT 1
-                             FROM public.appointments a
-                             WHERE a.coach_id = l.coach_id
-                               AND a.status IN ('scheduled','confirmed')
-                               AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(l.starts_at, l.ends_at, '[)')
-                         )
-                     )
-                SELECT coach_id AS "coachId", email FROM not_overlapping;
-            `
-        } catch (e) {
-            console.error("[BOOKING] SQL error at step 3 (find candidates)", e)
-            throw e
-        }
+        // 5) Chercher les coachs candidats (IDs en bigint)
+        const candidates: Array<{ coachId: number; email: string }> = await sql/* sql */`
+      WITH input AS (
+        SELECT
+          ${Number(reqRow.serviceId)}::bigint                 AS service_id,
+          ${reqRow.startsAt}::timestamptz                     AS starts_at,
+          ${reqRow.endsAt}::timestamptz                       AS ends_at
+      ),
+      base AS (
+        SELECT c.id AS coach_id, c.email,
+               COALESCE(NULLIF(c.timezone,''),'Europe/Paris') AS tz
+        FROM public.coaches c
+        JOIN public.coach_services cs ON cs.coach_id = c.id
+        JOIN input i ON i.service_id = cs.service_id
+        WHERE c.is_active = true
+      ),
+      local_times AS (
+        SELECT b.*,
+               EXTRACT(DOW FROM (i.starts_at AT TIME ZONE b.tz))::int        AS dow,
+               (EXTRACT(HOUR FROM (i.starts_at AT TIME ZONE b.tz))*60
+                 + EXTRACT(MINUTE FROM (i.starts_at AT TIME ZONE b.tz)))::int AS start_min,
+               (EXTRACT(HOUR FROM (i.ends_at   AT TIME ZONE b.tz))*60
+                 + EXTRACT(MINUTE FROM (i.ends_at   AT TIME ZONE b.tz)))::int AS end_min,
+               (i.starts_at AT TIME ZONE b.tz)::date AS local_date,
+               i.starts_at, i.ends_at
+        FROM base b, input i
+      ),
+      allowed_by_exception AS (
+        SELECT l.coach_id
+        FROM local_times l
+        JOIN public.coach_availability_exceptions e
+          ON e.coach_id = l.coach_id
+         AND e.date = l.local_date
+         AND e.is_available = true
+         AND e.start_minute <= l.start_min
+         AND e.end_minute   >= l.end_min
+      ),
+      allowed_by_rules AS (
+        SELECT DISTINCT l.coach_id
+        FROM local_times l
+        JOIN public.coach_availability_rules r
+          ON r.coach_id = l.coach_id
+         AND r.is_active = true
+         AND r.weekday = l.dow
+         AND r.start_minute <= l.start_min
+         AND r.end_minute   >= l.end_min
+        WHERE NOT EXISTS (
+          SELECT 1 FROM public.coach_availability_exceptions e
+          WHERE e.coach_id = l.coach_id AND e.date = l.local_date
+        )
+      ),
+      time_ok AS (
+        SELECT coach_id FROM allowed_by_exception
+        UNION
+        SELECT coach_id FROM allowed_by_rules
+      ),
+      not_overlapping AS (
+        SELECT l.coach_id, l.email
+        FROM local_times l
+        JOIN time_ok t USING (coach_id)
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM public.appointments a
+          WHERE a.coach_id = l.coach_id
+            AND a.status IN ('scheduled','confirmed')
+            AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(l.starts_at, l.ends_at, '[)')
+        )
+      )
+      SELECT coach_id AS "coachId", email FROM not_overlapping;
+    `
 
-        // 4) Candidates + outbox + envoi OVH
+        // 6) Enregistrer candidats + tokens
         let queuedEmails = 0
         let emailRows: Array<{ to_email: string; subject: string; html: string }> = []
 
-        console.log("[BOOKING] raw candidates:", candidates)
-
         if (Array.isArray(candidates) && candidates.length > 0) {
-            const coachIds = candidates.map(c => Number(c?.coachId)).filter(Number.isFinite)
-            console.log("[BOOKING] coachIds cleaned:", coachIds)
+            const coachIds = candidates.map(c => Number(c.coachId)).filter(Number.isFinite)
 
-            if (coachIds.length === 0) {
-                console.warn("[BOOKING] no valid coach ids after cleaning -> skip candidates/outbox")
-            } else {
-                console.log("[BOOKING] inserting appointment_candidates for request", requestId)
+            if (coachIds.length > 0) {
                 const inserted = await sql/* sql */`
-                    WITH to_ins AS (
-                        SELECT UNNEST(${coachIds}::int[]) AS coach_id
-                    ),
-                         ins AS (
-                    INSERT INTO public.appointment_candidates (request_id, coach_id)
-                    SELECT ${requestId}::int, t.coach_id
-                    FROM to_ins t
-                        ON CONFLICT (request_id, coach_id) DO NOTHING
+          WITH to_ins AS (
+            SELECT UNNEST(${coachIds}::bigint[]) AS coach_id
+          ),
+          ins AS (
+            INSERT INTO public.appointment_candidates (request_id, coach_id)
+            SELECT ${requestId}::bigint, t.coach_id
+            FROM to_ins t
+            ON CONFLICT (request_id, coach_id) DO NOTHING
             RETURNING coach_id AS "coachId", decision_token AS "decisionToken"
           ),
           existing AS (
-                    SELECT coach_id AS "coachId", decision_token AS "decisionToken"
-                    FROM public.appointment_candidates
-                    WHERE request_id = ${requestId}::int
-                      AND coach_id IN (SELECT coach_id FROM to_ins)
-                        )
-                    SELECT "coachId", "decisionToken" FROM ins
-                    UNION ALL
-                    SELECT "coachId", "decisionToken" FROM existing;
-                `
-                console.log("[BOOKING] candidates tokens:", inserted)
+            SELECT coach_id AS "coachId", decision_token AS "decisionToken"
+            FROM public.appointment_candidates
+            WHERE request_id = ${requestId}::bigint
+              AND coach_id IN (SELECT coach_id FROM to_ins)
+          )
+          SELECT "coachId", "decisionToken" FROM ins
+          UNION ALL
+          SELECT "coachId", "decisionToken" FROM existing;
+        `
 
                 const tokenByCoach: Record<number, string> =
                     Object.fromEntries(inserted.map((r: any) => [Number(r.coachId), String(r.decisionToken)]))
@@ -399,10 +371,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             requestId,
             clientId,
-            candidates: (candidates || []).map(c => c.coachId),
+            candidates: (candidates || []).map(c => Number(c.coachId)),
             queuedEmails,
         }, { status: 201 })
-
     } catch (e: any) {
         console.error("[ERROR BOOKING REQUEST]", e)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })

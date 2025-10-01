@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
         phone = null,
         city = null,
         status = "Actif",
-        coachType: coachTypeRaw,        // nouveau champ côté front
-        runningExperience,              // fallback legacy
+        coachType: coachTypeRaw,
+        runningExperience, // legacy
         dateOfBirth = null,
-        serviceIds = [] as number[],
+        serviceIds = [],
     } = body ?? {}
 
     if (!firstName || !lastName || !email) {
@@ -89,23 +89,29 @@ export async function POST(request: NextRequest) {
     const isActive  = normalizeIsActive(status)
     const coachType = normalizeCoachType(coachTypeRaw ?? runningExperience)
 
-    const coachRows = await sql/* sql */`
-        INSERT INTO public.coaches (
-            first_name, last_name, email, phone, city,
-            is_active, coach_type, date_of_birth
-        )
-        VALUES (
-                   ${firstName}, ${lastName}, ${email}, ${phone}, ${city},
-                   ${isActive}, ${coachType}, ${dateOfBirth}
-               )
-            RETURNING id
-    `
-    const coachId = coachRows[0].id as number
+    // ✅ Normaliser serviceIds en nombres
+    const serviceIdsNum: number[] = Array.isArray(serviceIds)
+        ? serviceIds.map((v: any) => Number(v)).filter(Number.isFinite)
+        : []
 
-    if (Array.isArray(serviceIds) && serviceIds.length > 0) {
+    const coachRows = await sql/* sql */`
+    INSERT INTO public.coaches (
+      first_name, last_name, email, phone, city,
+      is_active, coach_type, date_of_birth
+    )
+    VALUES (
+      ${firstName}, ${lastName}, ${email}, ${phone}, ${city},
+      ${isActive}, ${coachType}, ${dateOfBirth}
+    )
+    RETURNING id
+  `
+    // ✅ id peut être string si colonne = BIGINT
+    const coachId = Number(coachRows[0].id)
+
+    if (serviceIdsNum.length > 0) {
         await sql/* sql */`
             INSERT INTO public.coach_services (coach_id, service_id)
-            SELECT ${coachId}, UNNEST(${serviceIds}::int[])
+            SELECT ${coachId}::bigint, UNNEST(${serviceIdsNum}::bigint[])
                 ON CONFLICT DO NOTHING
         `
     }
@@ -138,7 +144,7 @@ export async function POST(request: NextRequest) {
         FROM public.coaches c
                  LEFT JOIN public.coach_services cs ON cs.coach_id = c.id
                  LEFT JOIN public.services s        ON s.id = cs.service_id
-        WHERE c.id = ${coachId}
+        WHERE c.id = ${coachId}::bigint
         GROUP BY c.id
     `
     return NextResponse.json(rows[0], { status: 201 })

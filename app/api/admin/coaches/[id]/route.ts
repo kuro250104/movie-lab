@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const id = Number(params.id)
-    if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+    if (!Number.isFinite(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
 
     const body = await request.json()
     const {
@@ -32,41 +32,54 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         serviceIds,
     } = body ?? {}
 
-    // map statut -> boolean si fourni, sinon laisse tel quel
+    // ✅ ne jamais envoyer "undefined" au driver
+    const firstNameV   = firstName   ?? null
+    const lastNameV    = lastName    ?? null
+    const emailV       = email       ?? null
+    const phoneV       = phone       ?? null
+    const cityV        = city        ?? null
+    const dateOfBirthV = dateOfBirth ?? null
+
+    // map statut -> boolean si fourni, sinon NULL pour ne pas écraser
     const isActiveProvided =
         typeof status === "string" ? (normalizeStatus(status) === "Actif") : null
+
     const coachTypeProvided =
         typeof coachType === "string" ? normalizeCoachType(coachType) : null
 
-    // maj coach
+    // 🔧 maj coach (aucune valeur undefined)
     const updated = await sql/* sql */`
     UPDATE public.coaches SET
-      first_name      = COALESCE(${firstName}, first_name),
-      last_name       = COALESCE(${lastName},  last_name),
-      email           = COALESCE(${email},     email),
-      phone           = COALESCE(${phone},     phone),
-      city            = COALESCE(${city},      city),
-      is_active       = COALESCE(${isActiveProvided}::boolean, is_active),
-      coach_type      = COALESCE(${coachTypeProvided}, coach_type),
-      date_of_birth   = COALESCE(${dateOfBirth}::date, date_of_birth),
-      updated_at      = NOW()
+      first_name    = COALESCE(${firstNameV}, first_name),
+      last_name     = COALESCE(${lastNameV},  last_name),
+      email         = COALESCE(${emailV},     email),
+      phone         = COALESCE(${phoneV},     phone),
+      city          = COALESCE(${cityV},      city),
+      is_active     = COALESCE(${isActiveProvided}::boolean, is_active),
+      coach_type    = COALESCE(${coachTypeProvided}, coach_type),
+      date_of_birth = COALESCE(${dateOfBirthV}::date, date_of_birth),
+      updated_at    = NOW()
     WHERE id = ${id}
     RETURNING id
   `
     if (updated.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-    // maj services si fourni
+    // 🔧 maj services (tolère int/bigint et strings)
     if (Array.isArray(serviceIds)) {
+        const ids: number[] = serviceIds.map((x: any) => Number(x)).filter(Number.isFinite)
+
         await sql/* sql */`DELETE FROM public.coach_services WHERE coach_id = ${id}`
-        if (serviceIds.length > 0) {
+
+        if (ids.length > 0) {
             await sql/* sql */`
         INSERT INTO public.coach_services (coach_id, service_id)
-        SELECT ${id}, UNNEST(${serviceIds}::int[])
+        SELECT ${id}, UNNEST(${ids}::text[])::int
         ON CONFLICT DO NOTHING
       `
         }
     }
 
+    // 🔧 renvoyer des IDs numériques dans le JSON
     const rows = await sql/* sql */`
         SELECT
             c.id,
@@ -91,7 +104,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             COALESCE(
                     JSON_AGG(
                         DISTINCT JSONB_BUILD_OBJECT(
-            'id', s.id, 'name', s.name, 'price', s.price, 'color', s.color, 'is_active', s.is_active
+            'id',   (s.id)::int,      -- 👈 force number côté front
+            'name', s.name,
+            'price', s.price,
+            'color', s.color,
+            'is_active', s.is_active
           )
         ) FILTER (WHERE s.id IS NOT NULL),
                     '[]'
@@ -110,7 +127,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const id = Number(params.id)
-    if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
+    if (!Number.isFinite(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 })
 
     await sql/* sql */`DELETE FROM public.coach_services WHERE coach_id = ${id}`
     await sql/* sql */`DELETE FROM public.coaches WHERE id = ${id}`

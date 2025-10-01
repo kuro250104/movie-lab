@@ -57,7 +57,7 @@ export default function AboutClient() {
                             className="text-6xl font-extrabold leading-tight mb-6 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent"
                         >
 
-                            Un brain d'histoire
+                            Un brin d'histoire
                         </motion.h1>
 
                         <motion.p
@@ -121,7 +121,7 @@ export default function AboutClient() {
                                 local au coeur de la ville toulousaine que movi-lab a vu le jour.
                                 <br/>
                                 <br/>
-                                <strong> Movi-lab ? </strong>C’est la réponse de ces 50 % de blessés chaque année parmi les 12,5 millions
+                                <strong> Movi-lab ? </strong> C’est la réponse de ces 50 % de blessés chaque année parmi les 12,5 millions
                                 de coureurs français, un constat qui fait froid dans le dos.
                                 Ce risque est d’autant plus présent chez les amateurs, 80 % se blessent au cours de la
                                 première année.
@@ -130,8 +130,8 @@ export default function AboutClient() {
                                 Grace au travaux de recherche effectué par l'équipe de movi-lab,
                                 nous développons des solutions avancées grâce a notre approche globale alliant
                                 technologie,
-                                science et accompagnement humain, convaincu que cette vision peut révolutionner la
-                                pratique sportive quotidienne.
+                                science et accompagnement humain,
+                                convaincu que cette vision révolutionne la pratique sportive quotidienne.
                             </p>
                         </motion.div>
                     </div>

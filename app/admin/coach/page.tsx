@@ -16,8 +16,15 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { LoadingPage } from "@/components/loading-spinner"
 
-
-type Service = { id: number; description:string; duration_minutes:number; name: string; price: number; is_active: boolean; color?: string }
+type Service = {
+    id: number
+    description: string
+    duration_minutes: number
+    name: string
+    price: number
+    is_active: boolean
+    color?: string
+}
 type Coach = {
     id: number
     firstName: string
@@ -40,14 +47,13 @@ const COACH_TYPES: Coach["coachType"][] = [
     "Autre",
 ]
 
-
 const api = {
     async getServices(): Promise<Service[]> {
         const res = await fetch("/api/admin/services", { credentials: "include" })
         if (!res.ok) throw new Error("Erreur chargement services")
         const rows = await res.json()
         return rows.map((r: any) => ({
-            id: r.id,
+            id: Number(r.id), // 👈 force number
             name: r.name,
             description: r.description ?? "",
             price: typeof r.price === "string" ? parseFloat(r.price) : (r.price ?? 0),
@@ -56,6 +62,7 @@ const api = {
             color: r.color ?? "bg-gray-500",
         }))
     },
+
     async createService(payload: Partial<Service> & { duration_minutes?: number }) {
         const body = {
             name: payload.name,
@@ -74,6 +81,7 @@ const api = {
         if (!res.ok) throw new Error("Création service échouée")
         return this.getServices()
     },
+
     async updateService(id: number, payload: Partial<Service>) {
         const body = {
             name: payload.name,
@@ -92,6 +100,7 @@ const api = {
         if (!res.ok) throw new Error("Mise à jour service échouée")
         return this.getServices()
     },
+
     async deleteService(id: number) {
         const res = await fetch(`/api/admin/services/${id}`, {
             method: "DELETE",
@@ -105,7 +114,7 @@ const api = {
         if (!res.ok) throw new Error("Erreur chargement coachs")
         const rows = await res.json()
         return rows.map((r: any) => ({
-            id: r.id,
+            id: Number(r.id), // 👈 force number
             firstName: r.firstName,
             lastName: r.lastName,
             email: r.email,
@@ -115,10 +124,13 @@ const api = {
             lastAppointment: r.lastAppointment ?? null,
             totalAppointments: r.totalAppointments ?? 0,
             status: (r.status === "Inactif" ? "Inactif" : "Actif") as Coach["status"],
-            coachType: (r.coachType ?? "Coach") as Coach["coachType"],
-            serviceIds: Array.isArray(r.services) ? r.services.map((s: any) => s.id) : [],
+            coachType: (r.coachType ?? "Coach sportif") as Coach["coachType"],
+            serviceIds: Array.isArray(r.services)
+                ? r.services.map((s: any) => Number(s.id)).filter(Number.isFinite) // 👈 number[]
+                : [],
         }))
     },
+
     async createCoach(payload: Coach) {
         const body = {
             firstName: payload.firstName,
@@ -129,7 +141,7 @@ const api = {
             status: payload.status,
             coachType: payload.coachType,
             dateOfBirth: payload.dateOfBirth ?? null,
-            serviceIds: payload.serviceIds ?? [],
+            serviceIds: (payload.serviceIds ?? []).map(Number), // 👈 enforce number[]
         }
         const res = await fetch("/api/admin/coaches", {
             method: "POST",
@@ -140,6 +152,7 @@ const api = {
         if (!res.ok) throw new Error("Création coach échouée")
         return this.getCoaches()
     },
+
     async updateCoach(id: number, payload: Partial<Coach>) {
         const body = {
             firstName: payload.firstName,
@@ -150,7 +163,7 @@ const api = {
             status: payload.status,
             coachType: payload.coachType,
             dateOfBirth: payload.dateOfBirth,
-            serviceIds: payload.serviceIds,
+            serviceIds: (payload.serviceIds ?? []).map(Number), // 👈 enforce number[]
         }
         const res = await fetch(`/api/admin/coaches/${id}`, {
             method: "PATCH",
@@ -161,6 +174,7 @@ const api = {
         if (!res.ok) throw new Error("Mise à jour coach échouée")
         return this.getCoaches()
     },
+
     async deleteCoach(id: number) {
         const res = await fetch(`/api/admin/coaches/${id}`, {
             method: "DELETE",
@@ -171,7 +185,6 @@ const api = {
 }
 
 export default function CoachesServicesPage() {
-
     const [services, setServices] = useState<Service[]>([])
     const [coaches, setCoaches] = useState<Coach[]>([])
     const [loading, setLoading] = useState(true)
@@ -206,7 +219,7 @@ export default function CoachesServicesPage() {
     }, [])
 
     const getStatusColor = (s: string) =>
-        (s === "Actif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800")
+        s === "Actif" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
 
     const getCoachTypeColor = (t?: Coach["coachType"]) => {
         switch (t) {
@@ -220,17 +233,25 @@ export default function CoachesServicesPage() {
                 return "bg-gray-100 text-gray-800"
         }
     }
-    const serviceById = useMemo(() => new Map(services.map(s => [s.id, s])), [services])
+
+    // 👇 Map indexée par Number(id)
+    const serviceById = useMemo(
+        () => new Map(services.map((s) => [Number(s.id), s])),
+        [services]
+    )
 
     const filteredCoaches = useMemo(() => {
         const term = searchTerm.trim().toLowerCase()
-        return coaches.filter(c => {
-            const match = !term || c.firstName.toLowerCase().includes(term) || c.lastName.toLowerCase().includes(term) || c.email.toLowerCase().includes(term)
+        return coaches.filter((c) => {
+            const match =
+                !term ||
+                c.firstName.toLowerCase().includes(term) ||
+                c.lastName.toLowerCase().includes(term) ||
+                c.email.toLowerCase().includes(term)
             const filt = filterStatus === "Tous" || c.status === filterStatus
             return match && filt
         })
     }, [coaches, searchTerm, filterStatus])
-
 
     const openNewCoach = () => {
         setEditingCoach({
@@ -241,7 +262,7 @@ export default function CoachesServicesPage() {
             phone: "",
             city: "",
             status: "Actif",
-            coachType: "",
+            coachType: "Coach sportif", // 👈 valeur par défaut cohérente
             serviceIds: [],
             dateOfBirth: null,
             lastAppointment: null,
@@ -250,7 +271,12 @@ export default function CoachesServicesPage() {
         setOpenCoachModal(true)
     }
 
-    const openEditCoach = (c: Coach) => { setEditingCoach({ ...c }); setOpenCoachModal(true) }
+    const openEditCoach = (c: Coach) => {
+        // 👇 on normalise les id de services (au cas où)
+        const normalized = { ...c, serviceIds: (c.serviceIds ?? []).map(Number) }
+        setEditingCoach(normalized)
+        setOpenCoachModal(true)
+    }
 
     const saveCoach = async () => {
         if (!editingCoach) return
@@ -277,7 +303,7 @@ export default function CoachesServicesPage() {
         try {
             setLoading(true)
             await api.deleteCoach(id)
-            setCoaches(prev => prev.filter(c => c.id !== id))
+            setCoaches((prev) => prev.filter((c) => c.id !== id))
         } catch (e: any) {
             alert(e?.message ?? "Erreur suppression coach")
         } finally {
@@ -285,27 +311,12 @@ export default function CoachesServicesPage() {
         }
     }
 
-    //
-    // const openNewService = () => {
-    //     setEditingService({
-    //         id: 0,
-    //         name: "",
-    //         description: "",
-    //         price: 0,
-    //         duration_minutes: 0,
-    //         is_active: true,
-    //         color: "bg-gray-500",
-    //     })
-    //     setOpenServiceModal(true)
-    // }
-    // const openEditService = (s: Service) => { setEditingService({ ...s }); setOpenServiceModal(true) }
-
     const saveService = async () => {
         if (!editingService) return
         try {
             setLoading(true)
             if (editingService.id === 0) {
-                const updated = await api.createService({ ...editingService})
+                const updated = await api.createService({ ...editingService })
                 setServices(updated)
             } else {
                 const updated = await api.updateService(editingService.id, editingService)
@@ -325,8 +336,10 @@ export default function CoachesServicesPage() {
         try {
             setLoading(true)
             await api.deleteService(id)
-            setServices(prev => prev.filter(s => s.id !== id))
-            setCoaches(prev => prev.map(c => ({ ...c, serviceIds: c.serviceIds.filter(sid => sid !== id) })))
+            setServices((prev) => prev.filter((s) => s.id !== id))
+            setCoaches((prev) =>
+                prev.map((c) => ({ ...c, serviceIds: c.serviceIds.filter((sid) => sid !== id) }))
+            )
         } catch (e: any) {
             alert(e?.message ?? "Erreur suppression service")
         } finally {
@@ -361,16 +374,14 @@ export default function CoachesServicesPage() {
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            {/*<Button variant="outline" onClick={openNewService}>*/}
-                            {/*    <Settings className="w-4 h-4 mr-2" /> Nouveau Service*/}
-                            {/*</Button>*/}
+                            {/* <Button variant="outline" onClick={openNewService}>
+                <Settings className="w-4 h-4 mr-2" /> Nouveau Service
+              </Button> */}
                             <Button className="bg-orange-600 hover:bg-orange-700" onClick={openNewCoach}>
                                 <Plus className="w-4 h-4 mr-2" /> Nouveau Coach
                             </Button>
                         </div>
-
                     </div>
-
                 </div>
             </header>
 
@@ -387,27 +398,49 @@ export default function CoachesServicesPage() {
                         </CardContent>
                     </Card>
                 )}
+
                 <Card className="mb-6">
                     <CardContent className="p-6">
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <Input className="pl-10" placeholder="Rechercher un coach…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                <Input
+                                    className="pl-10"
+                                    placeholder="Rechercher un coach…"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
                             <div className="flex gap-2">
-                                <Button size="sm" variant={filterStatus === "Tous" ? "default" : "outline"} onClick={() => setFilterStatus("Tous")}>
+                                <Button
+                                    size="sm"
+                                    variant={filterStatus === "Tous" ? "default" : "outline"}
+                                    onClick={() => setFilterStatus("Tous")}
+                                >
                                     <Filter className="w-4 h-4 mr-2" /> Tous
                                 </Button>
-                                <Button size="sm" variant={filterStatus === "Actif" ? "default" : "outline"} onClick={() => setFilterStatus("Actif")}>Actifs</Button>
-                                <Button size="sm" variant={filterStatus === "Inactif" ? "default" : "outline"} onClick={() => setFilterStatus("Inactif")}>Inactifs</Button>
+                                <Button
+                                    size="sm"
+                                    variant={filterStatus === "Actif" ? "default" : "outline"}
+                                    onClick={() => setFilterStatus("Actif")}
+                                >
+                                    Actifs
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={filterStatus === "Inactif" ? "default" : "outline"}
+                                    onClick={() => setFilterStatus("Inactif")}
+                                >
+                                    Inactifs
+                                </Button>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 <div className="grid gap-6">
-                    {filteredCoaches.map(c => {
-                        const cServices = c.serviceIds.map(id => serviceById.get(id)).filter(Boolean) as Service[]
+                    {filteredCoaches.map((c) => {
+                        const cServices = c.serviceIds.map((id) => serviceById.get(Number(id))).filter(Boolean) as Service[]
                         return (
                             <Card key={c.id} className="hover:shadow-lg transition-shadow">
                                 <CardContent className="p-6">
@@ -415,10 +448,20 @@ export default function CoachesServicesPage() {
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
-                                                    <h3 className="text-xl font-semibold text-gray-900">{c.firstName} {c.lastName}</h3>
+                                                    <h3 className="text-xl font-semibold text-gray-900">
+                                                        {c.firstName} {c.lastName}
+                                                    </h3>
                                                     <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
-                                                        <div className="flex items-center gap-1"><Mail className="w-4 h-4" />{c.email}</div>
-                                                        {c.phone && <div className="flex items-center gap-1"><Phone className="w-4 h-4" />{c.phone}</div>}
+                                                        <div className="flex items-center gap-1">
+                                                            <Mail className="w-4 h-4" />
+                                                            {c.email}
+                                                        </div>
+                                                        {c.phone && (
+                                                            <div className="flex items-center gap-1">
+                                                                <Phone className="w-4 h-4" />
+                                                                {c.phone}
+                                                            </div>
+                                                        )}
                                                         {c.city && <span>{c.city}</span>}
                                                     </div>
                                                 </div>
@@ -429,23 +472,45 @@ export default function CoachesServicesPage() {
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 mb-4">
-                                                {cServices.length ? cServices.map(s => (
-                                                    <Badge key={s.id} variant="outline" className={`border ${s.color ?? "bg-gray-100"} text-gray-900`}>
-                                                        {s.name} • {s.price}€
-                                                    </Badge>
-                                                )) : <span className="text-sm text-gray-500">Aucun service assigné</span>}
+                                                {cServices.length ? (
+                                                    cServices.map((s) => (
+                                                        <Badge
+                                                            key={s.id}
+                                                            variant="outline"
+                                                            className={`border ${s.color ?? "bg-gray-100"} text-gray-900`}
+                                                        >
+                                                            {s.name} • {s.price}€
+                                                        </Badge>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-sm text-gray-500">Aucun service assigné</span>
+                                                )}
                                             </div>
 
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                                <div><span className="text-gray-500">Dernier RDV:</span><p className="font-medium">{c.lastAppointment ? new Date(c.lastAppointment).toLocaleDateString("fr-FR") : "—"}</p></div>
-                                                <div><span className="text-gray-500">Total RDV:</span><p className="font-medium">{c.totalAppointments ?? 0}</p></div>
+                                                <div>
+                                                    <span className="text-gray-500">Dernier RDV:</span>
+                                                    <p className="font-medium">
+                                                        {c.lastAppointment ? new Date(c.lastAppointment).toLocaleDateString("fr-FR") : "—"}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500">Total RDV:</span>
+                                                    <p className="font-medium">{c.totalAppointments ?? 0}</p>
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => openEditCoach(c)}><Edit className="w-4 h-4 mr-2" />Modifier</Button>
+                                            <Button variant="outline" size="sm" onClick={() => openEditCoach(c)}>
+                                                <Edit className="w-4 h-4 mr-2" />
+                                                Modifier
+                                            </Button>
                                             <Link href={`/admin/appointments/new?coach=${c.id}`}>
-                                                <Button variant="outline" size="sm"><Calendar className="w-4 h-4 mr-2" />RDV</Button>
+                                                <Button variant="outline" size="sm">
+                                                    <Calendar className="w-4 h-4 mr-2" />
+                                                    RDV
+                                                </Button>
                                             </Link>
                                             <Link href={`/admin/coach/${c.id}`}>
                                                 <Button variant="outline" size="sm">
@@ -453,7 +518,14 @@ export default function CoachesServicesPage() {
                                                     Disponibilités
                                                 </Button>
                                             </Link>
-                                            <Button variant="outline" size="sm" className="text-red-600 bg-transparent" onClick={() => deleteCoach(c.id)}><Trash2 className="w-4 h-4" /></Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-600 bg-transparent"
+                                                onClick={() => deleteCoach(c.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -467,8 +539,12 @@ export default function CoachesServicesPage() {
                         <CardContent className="p-12 text-center">
                             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun coach trouvé</h3>
-                            <p className="text-gray-600 mb-4">{searchTerm ? "Modifiez votre recherche" : "Ajoutez votre premier coach"}</p>
-                            <Button className="bg-orange-600 hover:bg-orange-700" onClick={openNewCoach}><Plus className="w-4 h-4 mr-2" /> Ajouter un coach</Button>
+                            <p className="text-gray-600 mb-4">
+                                {searchTerm ? "Modifiez votre recherche" : "Ajoutez votre premier coach"}
+                            </p>
+                            <Button className="bg-orange-600 hover:bg-orange-700" onClick={openNewCoach}>
+                                <Plus className="w-4 h-4 mr-2" /> Ajouter un coach
+                            </Button>
                         </CardContent>
                     </Card>
                 )}
@@ -487,14 +563,14 @@ export default function CoachesServicesPage() {
                                     <Label>Prénom</Label>
                                     <Input
                                         value={editingCoach.firstName}
-                                        onChange={e => setEditingCoach({ ...editingCoach, firstName: e.target.value })}
+                                        onChange={(e) => setEditingCoach({ ...editingCoach, firstName: e.target.value })}
                                     />
                                 </div>
                                 <div>
                                     <Label>Nom</Label>
                                     <Input
                                         value={editingCoach.lastName}
-                                        onChange={e => setEditingCoach({ ...editingCoach, lastName: e.target.value })}
+                                        onChange={(e) => setEditingCoach({ ...editingCoach, lastName: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -506,7 +582,7 @@ export default function CoachesServicesPage() {
                                     <Input
                                         type="email"
                                         value={editingCoach.email}
-                                        onChange={e => setEditingCoach({ ...editingCoach, email: e.target.value })}
+                                        onChange={(e) => setEditingCoach({ ...editingCoach, email: e.target.value })}
                                     />
                                 </div>
                                 <div>
@@ -514,7 +590,7 @@ export default function CoachesServicesPage() {
                                     <Input
                                         type="tel"
                                         value={editingCoach.phone ?? ""}
-                                        onChange={e => setEditingCoach({ ...editingCoach, phone: e.target.value })}
+                                        onChange={(e) => setEditingCoach({ ...editingCoach, phone: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -524,19 +600,21 @@ export default function CoachesServicesPage() {
                                 <Label>Ville</Label>
                                 <Input
                                     value={editingCoach.city ?? ""}
-                                    onChange={e => setEditingCoach({ ...editingCoach, city: e.target.value })}
+                                    onChange={(e) => setEditingCoach({ ...editingCoach, city: e.target.value })}
                                 />
                             </div>
 
-                            {/* Statut & expérience */}
+                            {/* Statut & type */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <Label>Statut</Label>
                                     <Select
                                         value={editingCoach.status}
-                                        onValueChange={v => setEditingCoach({ ...editingCoach, status: v as Coach["status"] })}
+                                        onValueChange={(v) => setEditingCoach({ ...editingCoach, status: v as Coach["status"] })}
                                     >
-                                        <SelectTrigger><SelectValue placeholder="Statut" /></SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Statut" />
+                                        </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Actif">Actif</SelectItem>
                                             <SelectItem value="Inactif">Inactif</SelectItem>
@@ -544,14 +622,22 @@ export default function CoachesServicesPage() {
                                     </Select>
                                 </div>
                                 <div>
-                                    <Label>Expérience running</Label>
+                                    <Label>Type de coach</Label>
                                     <Select
-                                        value={editingCoach.coachType ?? "Intermédiaire"}
-                                        onValueChange={v => setEditingCoach({ ...editingCoach, coachType: v as Coach["coachType"] })}
+                                        value={editingCoach.coachType ?? "Coach sportif"}
+                                        onValueChange={(v) =>
+                                            setEditingCoach({ ...editingCoach, coachType: v as Coach["coachType"] })
+                                        }
                                     >
-                                        <SelectTrigger><SelectValue placeholder="Niveau" /></SelectTrigger>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Type" />
+                                        </SelectTrigger>
                                         <SelectContent>
-                                            {COACH_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                            {COACH_TYPES.map((t) => (
+                                                <SelectItem key={t} value={t}>
+                                                    {t}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -561,28 +647,35 @@ export default function CoachesServicesPage() {
                             <div>
                                 <Label>Services associés</Label>
                                 <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {services.map(s => {
-                                        const checked = editingCoach.serviceIds.includes(s.id)
+                                    {services.map((s) => {
+                                        const sid = Number(s.id)
+                                        const checked = Boolean(editingCoach.serviceIds?.includes(sid))
                                         return (
-                                            <label key={s.id} className="flex items-center gap-2 p-2 rounded border hover:bg-gray-50 cursor-pointer">
+                                            <label
+                                                key={sid}
+                                                className="flex items-center gap-2 p-2 rounded border hover:bg-gray-50 cursor-pointer"
+                                            >
                                                 <Checkbox
                                                     checked={checked}
                                                     onCheckedChange={(ch) => {
-                                                        setEditingCoach({
-                                                            ...editingCoach,
-                                                            serviceIds: ch
-                                                                ? [...editingCoach.serviceIds, s.id]
-                                                                : editingCoach.serviceIds.filter(id => id !== s.id),
-                                                        })
+                                                        // ch: boolean | "indeterminate"
+                                                        const isChecked = ch === true
+                                                        const next = new Set((editingCoach.serviceIds ?? []).map(Number))
+                                                        if (isChecked) next.add(sid)
+                                                        else next.delete(sid)
+                                                        setEditingCoach({ ...editingCoach, serviceIds: Array.from(next) })
                                                     }}
                                                 />
                                                 <span className="text-sm">
-                    {s.name} <span className="text-gray-500">• {s.price}€ • {s.duration_minutes}m</span>
-                  </span>
+                          {s.name}{" "}
+                                                    <span className="text-gray-500">• {s.price}€ • {s.duration_minutes}m</span>
+                        </span>
                                             </label>
                                         )
                                     })}
-                                    {!services.length && <p className="text-sm text-gray-500">Aucun service disponible</p>}
+                                    {!services.length && (
+                                        <p className="text-sm text-gray-500">Aucun service disponible</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -597,71 +690,63 @@ export default function CoachesServicesPage() {
                             >
                                 <Trash2 className="w-4 h-4 mr-2" /> Supprimer
                             </Button>
-                        ) : <div />}
+                        ) : (
+                            <div />
+                        )}
 
-                        <Button variant="outline" onClick={() => setOpenCoachModal(false)}>Annuler</Button>
+                        <Button variant="outline" onClick={() => setOpenCoachModal(false)}>
+                            Annuler
+                        </Button>
                         <Button className="bg-orange-600 hover:bg-orange-700" onClick={saveCoach} disabled={loading}>
                             {loading ? "Enregistrement…" : "Enregistrer"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
             <Dialog open={openServiceModal} onOpenChange={setOpenServiceModal}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>
-                            {editingService?.id ? "Modifier le service" : "Nouveau service"}
-                        </DialogTitle>
+                        <DialogTitle>{editingService?.id ? "Modifier le service" : "Nouveau service"}</DialogTitle>
                     </DialogHeader>
 
                     {editingService && (
                         <div className="space-y-4">
-                            {/* Nom */}
                             <div>
                                 <Label>Nom du service</Label>
                                 <Input
                                     value={editingService.name}
-                                    onChange={e =>
-                                        setEditingService({ ...editingService, name: e.target.value })
-                                    }
+                                    onChange={(e) => setEditingService({ ...editingService, name: e.target.value })}
                                 />
                             </div>
 
-                            {/* Description */}
                             <div>
                                 <Label>Description</Label>
                                 <Input
                                     value={editingService.description ?? ""}
-                                    onChange={e =>
-                                        setEditingService({ ...editingService, description: e.target.value })
-                                    }
+                                    onChange={(e) => setEditingService({ ...editingService, description: e.target.value })}
                                 />
                             </div>
 
-                            {/* Prix */}
                             <div>
                                 <Label>Prix (€)</Label>
                                 <Input
                                     type="number"
                                     min={0}
                                     value={editingService.price}
-                                    onChange={e =>
-                                        setEditingService({
-                                            ...editingService,
-                                            price: Number(e.target.value),
-                                        })
+                                    onChange={(e) =>
+                                        setEditingService({ ...editingService, price: Number(e.target.value) })
                                     }
                                 />
                             </div>
 
-                            {/* Durée */}
                             <div>
                                 <Label>Durée (minutes)</Label>
                                 <Input
                                     type="number"
                                     min={1}
                                     value={editingService.duration_minutes}
-                                    onChange={e =>
+                                    onChange={(e) =>
                                         setEditingService({
                                             ...editingService,
                                             duration_minutes: Number(e.target.value),
@@ -670,14 +755,11 @@ export default function CoachesServicesPage() {
                                 />
                             </div>
 
-                            {/* Couleur */}
                             <div>
                                 <Label>Couleur (badge)</Label>
                                 <Select
                                     value={editingService.color ?? "bg-gray-500"}
-                                    onValueChange={v =>
-                                        setEditingService({ ...editingService, color: v })
-                                    }
+                                    onValueChange={(v) => setEditingService({ ...editingService, color: v })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Couleur" />
@@ -692,12 +774,11 @@ export default function CoachesServicesPage() {
                                 </Select>
                             </div>
 
-                            {/* Actif */}
                             <div className="flex items-center gap-2">
                                 <Checkbox
                                     checked={editingService.is_active}
-                                    onCheckedChange={ch =>
-                                        setEditingService({ ...editingService, is_active: Boolean(ch) })
+                                    onCheckedChange={(ch) =>
+                                        setEditingService({ ...editingService, is_active: ch === true })
                                     }
                                 />
                                 <Label>Actif</Label>
@@ -725,10 +806,7 @@ export default function CoachesServicesPage() {
                         <Button variant="outline" onClick={() => setOpenServiceModal(false)}>
                             Annuler
                         </Button>
-                        <Button
-                            className="bg-orange-600 hover:bg-orange-700"
-                            onClick={saveService}
-                        >
+                        <Button className="bg-orange-600 hover:bg-orange-700" onClick={saveService}>
                             Enregistrer
                         </Button>
                     </DialogFooter>
