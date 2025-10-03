@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
                 }))
             : []
 
-    // transaction: insert service + items, puis renvoyer le service avec items
     const created = await sql.begin(async (tx) => {
         const [service] = await tx/* sql */`
             INSERT INTO services (name, description, price, duration_minutes, is_active, color)
