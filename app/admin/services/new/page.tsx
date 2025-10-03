@@ -1,18 +1,24 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import {ReactNode, useEffect, useMemo, useState} from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Search, Plus, Edit, Trash2, ArrowLeft, Settings, Target } from "lucide-react"
+import {Users, Search, Plus, Edit, Trash2, ArrowLeft, Settings, Target, Icon, Zap} from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import {sneaker} from "@lucide/lab";
+import {Barbell, Note, PersonSimple, PersonSimpleRun, SneakerMove} from "@phosphor-icons/react"
+import {GiBackPain, GiLeg} from "react-icons/gi";
+import {ImStatsDots} from "react-icons/im";
+import {LiaUserFriendsSolid} from "react-icons/lia";
 
 type ServiceItem = { id?: number; service_id?: number; icon: string; title: string; description?: string }
+
 type Service = {
     id: number
     name: string
@@ -22,6 +28,22 @@ type Service = {
     is_active: boolean
     color?: string
     items?: ServiceItem[]
+}
+
+
+const iconMap: Record<string, ReactNode> = {
+    sneaker: <Icon iconNode={sneaker} className="w-5 h-5" />,
+    target: <Target className="w-5 h-5" />,
+    zap: <Zap className="w-5 h-5" />,
+    runningMan: <PersonSimpleRun className="w-5 h-5" />,
+    simpleMan: <PersonSimple className="w-5 h-5" />,
+    shoes: <SneakerMove className="w-5 h-5" />,
+    note: <Note className="w-5 h-5" />,
+    leg: <GiLeg className="w-5 h-5" />,
+    chart: <ImStatsDots className="w-5 h-5" />,
+    barbell: <Barbell className="w-5 h-5" />,
+    backpain: <GiBackPain className="w-5 h-5" />,
+    userfriend: <LiaUserFriendsSolid className="w-5 h-5" />,
 }
 
 const api = {
@@ -110,6 +132,29 @@ const api = {
     },
 }
 
+export function IconSelect({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+    return (
+        <Select value={value} onValueChange={onChange}>
+            <SelectTrigger className="w-full">
+                <SelectValue>
+                    <div className="flex items-center gap-2">
+                        {iconMap[value]} <span className="capitalize">{value || "Choisir une icône"}</span>
+                    </div>
+                </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+                {Object.entries(iconMap).map(([key, icon]) => (
+                    <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                            {icon}
+                            <span className="capitalize">{key}</span>
+                        </div>
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    )
+}
 export default function CoachesServicesPage() {
     const [services, setServices] = useState<Service[]>([])
     const [loading, setLoading] = useState(true)
@@ -426,7 +471,10 @@ export default function CoachesServicesPage() {
                                         <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start border rounded p-2">
                                             <div className="md:col-span-3">
                                                 <Label className="text-xs">Icône</Label>
-                                                <Input value={it.icon} onChange={(e) => updateItem(idx, { icon: e.target.value })} />
+                                                <IconSelect
+                                                    value={it.icon}
+                                                    onChange={(val) => updateItem(idx, { icon: val })}
+                                                />
                                             </div>
                                             <div className="md:col-span-4">
                                                 <Label className="text-xs">Titre</Label>
