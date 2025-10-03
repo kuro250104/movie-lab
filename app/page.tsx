@@ -10,6 +10,7 @@ import {useOffers} from "@/hooks/use-offers";
 import {BookingModal} from "@/components/booking-modal";
 import {useState} from "react";
 import {LoadingPage} from "@/components/loading-spinner";
+import {NewBookingModal} from "@/components/new-booking-modal";
 
 
 
@@ -361,7 +362,7 @@ export default function Home() {
             </section>
 
             {selectedService && (
-                <BookingModal
+                <NewBookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => {
                         setIsBookingModalOpen(false)
