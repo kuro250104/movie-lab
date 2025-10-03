@@ -3,10 +3,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { sql } from "@/lib/db"
 import { getAdminFromRequest } from "@/lib/auth"
 
-// Facultatif mais conseillé si tu utilises 'postgres' côté Node
 export const runtime = "nodejs"
 
-// GET /api/admin/appointments?from=YYYY-MM-DD&to=YYYY-MM-DD&status=scheduled
 export async function GET(request: NextRequest) {
     const admin = await getAdminFromRequest(request)
     if (!admin) {
