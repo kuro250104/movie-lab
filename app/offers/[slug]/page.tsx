@@ -126,11 +126,11 @@ export default function OfferBySlugPage() {
                             </Link>
 
 
-                            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+                            <h1 className="font-bold text-white mb-4 leading-tight tracking-tight text-[clamp(2rem,6vw,3.25rem)]">
                                 {service.name}
                             </h1>
 
-                            <p className="text-xl text-gray-200 mb-8 leading-relaxed whitespace-pre-line">
+                            <p className="text-gray-200 mb-8 leading-relaxed whitespace-pre-line text-[clamp(1rem,3.2vw,1.25rem)]">
                                 {service.description ?? ""}
                             </p>
 
