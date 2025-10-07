@@ -12,6 +12,7 @@ import Script from "next/script"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
+
     title: "Movi-Lab - Analyse 3D de la course",
     description: "Transforme tes défis en réussite, progresse en toute sérénité avec notre analyse 3D de pointe",
     icons: {
@@ -129,6 +130,7 @@ export default function RootLayout({
     return (
         <html lang="fr">
         <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
             <Script
                 id="jsonld-organization"
                 type="application/ld+json"
