@@ -9,15 +9,13 @@ const BUFFER_MINUTES = 10
 
 const nn = <T>(v: T | undefined | null) => (v === undefined ? null : v)
 
-function must<T>(v: T | undefined, label: string): T {
-    if (v === undefined) {
-        console.error(`[BOOKING] '${label}' is undefined`)
-        throw new Error(`Param '${label}' is undefined`)
+function must<T>(v: T | null | undefined, label: string): T {
+    if (v == null) {
+        console.error(`[BOOKING] '${label}' is null/undefined`)
+        throw new Error(`Param '${label}' is null/undefined`)
     }
     return v
 }
-
-/* ----------------------------- Email helpers ----------------------------- */
 
 function escapeHtml(s: string) {
     return s
@@ -48,8 +46,8 @@ function renderBookingEmail(opts: {
     servicePrice?: number | null
     durationMinutes?: number | null
     startsAtISO: string
-    acceptUrl: string
-    declineUrl: string
+    acceptUrl?: string        // <- optionnel
+    declineUrl?: string       // <- optionnel
     notes?: string | null
     supplements?: EmailSupplement[]
 }) {
@@ -150,6 +148,33 @@ function renderBookingEmail(opts: {
     `
             : ""
 
+    const actions =
+        acceptUrl && declineUrl
+            ? `
+<tr>
+  <td style="padding:24px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
+      <tr>
+        <td align="center" style="padding-top:4px;">
+          <a href="${acceptUrl}"
+             style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;
+                    font-weight:600;font-size:15px;padding:12px 20px;border-radius:6px;
+                    box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            Accepter la demande
+          </a>
+          <a href="${declineUrl}"
+             style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;
+                    font-weight:600;font-size:15px;padding:12px 20px;border-radius:6px;
+                    margin-left:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            Refuser la demande
+          </a>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>`
+            : ""
+
     return `
   <div style="background:#f3f4f6;padding:24px 0;margin:0;">
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
@@ -173,7 +198,7 @@ function renderBookingEmail(opts: {
                   <strong style="color:#111827;">${escapeHtml(serviceName)}</strong>.
                 </p>
                 <div style="font-size:14px;line-height:1.6;color:#374151;">
-                  Date/heure : <strong style="color:#111827;">${when}</strong>
+                  Date/heure: <strong style="color:#111827;">${when}</strong>
                   ${priceRow}
                   ${durationRow}
                   ${coordRows}
@@ -183,30 +208,7 @@ function renderBookingEmail(opts: {
 
             ${supplementsTable}
             ${notesBlock}
-
-            <!-- CTA -->
-<tr>
-  <td style="padding:24px;">
-    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">
-      <tr>
-        <td align="center" style="padding-top:4px;">
-          <a href="${acceptUrl}"
-             style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;
-                    font-weight:600;font-size:15px;padding:12px 20px;border-radius:6px;
-                    box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            Accepter la demande
-          </a>
-          <a href="${declineUrl}"
-             style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;
-                    font-weight:600;font-size:15px;padding:12px 20px;border-radius:6px;
-                    margin-left:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            Refuser la demande
-          </a>
-        </td>
-      </tr>
-    </table>
-  </td>
-</tr>
+            ${actions}
 
             <!-- Footer -->
             <tr>
@@ -225,8 +227,6 @@ function renderBookingEmail(opts: {
     </table>
   </div>`
 }
-
-/* --------------------------------- Route -------------------------------- */
 
 export async function POST(req: NextRequest) {
     try {
@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
             ? body.supplementIds.map((x: any) => Number(x)).filter(Number.isFinite)
             : []
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? null
         console.log("[BOOKING] baseUrl:", baseUrl)
 
         if (!firstName || !lastName || !email || !serviceId || !startsAt) {
@@ -259,38 +259,41 @@ export async function POST(req: NextRequest) {
             )
         }
 
+        // 0) Fallback admin emails
+        const fallbackCsv = process.env.BOOKING_FALLBACK ?? ""
+        const fallbackEmails = fallbackCsv.split(",").map(s => s.trim()).filter(Boolean)
+
         // 1) Upsert client
         const clientRows = await sql/* sql */`
-            WITH upsert_client AS (
-            INSERT INTO public.clients (first_name, last_name, email, phone)
-            SELECT ${must(firstName, "firstName")}, ${must(lastName, "lastName")}, ${must(
-                    email,
-                    "email"
-            )}, ${nn(phone)}
-                WHERE NOT EXISTS (SELECT 1 FROM public.clients WHERE lower(email) = lower(${must(
-                    email,
-                    "email"
-            )}))
-                RETURNING id
-                )
-            SELECT id FROM upsert_client
-            UNION ALL
-            SELECT id FROM public.clients WHERE lower(email) = lower(${must(email, "email")})
-                LIMIT 1;
-        `
+      WITH upsert_client AS (
+        INSERT INTO public.clients (first_name, last_name, email, phone)
+        SELECT ${must(firstName, "firstName")},
+               ${must(lastName, "lastName")},
+               ${must(email, "email")},
+               ${nn(phone)}
+        WHERE NOT EXISTS (
+          SELECT 1 FROM public.clients WHERE lower(email) = lower(${must(email, "email")})
+        )
+        RETURNING id
+      )
+      SELECT id FROM upsert_client
+      UNION ALL
+      SELECT id FROM public.clients
+      WHERE lower(email) = lower(${must(email, "email")})
+      LIMIT 1;
+    `
         const clientId = Number(clientRows[0].id)
 
         // 2) Service
         const svcRows = await sql/* sql */`
-            SELECT
-                id               AS "id",
-                duration_minutes AS "durationMinutes",
-                price            AS "price",
-                is_active        AS "isActive",
-                name             AS "name"
-            FROM public.services
-            WHERE id = ${serviceId}::bigint
-        `
+      SELECT id               AS "id",
+             duration_minutes AS "durationMinutes",
+             price            AS "price",
+             is_active        AS "isActive",
+             name             AS "name"
+      FROM public.services
+      WHERE id = ${serviceId}::bigint
+    `
         const svc = svcRows[0]
         if (!svc || !svc.isActive) {
             return NextResponse.json({ error: "Service not found or inactive" }, { status: 400 })
@@ -315,24 +318,44 @@ export async function POST(req: NextRequest) {
             emailSafe,
         })
 
+        // 2.b) Récup des suppléments (pour récap email)
+        let chosenSupps: EmailSupplement[] = []
+        if (supplementIds.length > 0) {
+            try {
+                const suppRows = await sql/* sql */`
+          SELECT id::int, name, COALESCE(price, 0)::numeric AS price
+          FROM public.supplements
+          WHERE id = ANY(${supplementIds}::int[])
+            AND is_active = true
+          ORDER BY name;
+        `
+                chosenSupps = (suppRows || []).map((r: any) => ({
+                    id: Number(r.id),
+                    name: String(r.name),
+                    price: Number(r.price),
+                }))
+            } catch (e) {
+                console.warn("[BOOKING] failed to fetch supplements for email recap", e)
+            }
+        }
+
         // 3) Anti-overlap
         const overlapCheck = await sql/* sql */`
-            WITH input AS (
-                SELECT
-                    ${svcId}::bigint                                             AS service_id,
-                    ${startIso}::timestamptz                                     AS starts_at,
-                    COALESCE(
-                            ${endIsoOrNull}::timestamptz,
-                            (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))
-                    ) + make_interval(mins => ${BUFFER_MINUTES})                 AS ends_at
-            )
-            SELECT COUNT(*)::int AS "count"
-            FROM public.appointments a
-                     JOIN input i ON i.service_id = a.service_id
-            WHERE a.status IN ('scheduled','confirmed')
-              AND tstzrange(a.starts_at, a.ends_at, '[)') &&
-            tstzrange(i.starts_at, i.ends_at, '[)');
-        `
+      WITH input AS (
+        SELECT
+          ${svcId}::bigint                 AS service_id,
+          ${startIso}::timestamptz         AS starts_at,
+          COALESCE(
+            ${endIsoOrNull}::timestamptz,
+            (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))
+          ) + make_interval(mins => ${BUFFER_MINUTES}) AS ends_at
+      )
+      SELECT COUNT(*)::int AS "count"
+      FROM public.appointments a
+      JOIN input i ON i.service_id = a.service_id
+      WHERE a.status IN ('scheduled', 'confirmed')
+        AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(i.starts_at, i.ends_at, '[)');
+    `
         if ((overlapCheck?.[0]?.count ?? 0) > 0) {
             return NextResponse.json(
                 { error: "Ce créneau n'est plus disponible. Merci de choisir un autre horaire." },
@@ -342,156 +365,170 @@ export async function POST(req: NextRequest) {
 
         // 4) Créer la request
         const requestRows = await sql/* sql */`
-            INSERT INTO public.appointment_requests (
-                service_id, customer_name, customer_email, timezone, starts_at, ends_at, status
-            )
-            VALUES (
-                       ${svcId}::bigint,
-                       ${fullName},
-                       ${emailSafe},
-                       'Europe/Paris',
-                       ${startIso}::timestamptz,
-                       COALESCE(${endIsoOrNull}::timestamptz, (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))),
-                       'pending'
-                   )
-                RETURNING
+      INSERT INTO public.appointment_requests
+        (service_id, customer_name, customer_email, timezone, starts_at, ends_at, status)
+      VALUES
+        (${svcId}::bigint,
+         ${fullName},
+         ${emailSafe},
+         'Europe/Paris',
+         ${startIso}::timestamptz,
+         COALESCE(${endIsoOrNull}::timestamptz, (${startIso}::timestamptz + make_interval(mins => ${svcDuration}))),
+         'pending')
+      RETURNING
         id,
         service_id AS "serviceId",
         starts_at  AS "startsAt",
         ends_at    AS "endsAt";
-        `
+    `
         const reqRow = requestRows[0]
         const requestId = Number(reqRow.id)
 
         // 5) Chercher les coachs candidats
         const candidates: Array<{ coachId: number; email: string }> = await sql/* sql */`
-            WITH input AS (
-                SELECT
-                    ${Number(reqRow.serviceId)}::bigint                 AS service_id,
-                    ${reqRow.startsAt}::timestamptz                     AS starts_at,
-                    ${reqRow.endsAt}::timestamptz                       AS ends_at
-            ),
-                 base AS (
-                     SELECT c.id AS coach_id, c.email,
-                            COALESCE(NULLIF(c.timezone,''),'Europe/Paris') AS tz
-                     FROM public.coaches c
-                              JOIN public.coach_services cs ON cs.coach_id = c.id
-                              JOIN input i ON i.service_id = cs.service_id
-                     WHERE c.is_active = true
-                 ),
-                 local_times AS (
-                     SELECT b.*,
-                            EXTRACT(DOW FROM (i.starts_at AT TIME ZONE b.tz))::int        AS dow,
-                         (EXTRACT(HOUR FROM (i.starts_at AT TIME ZONE b.tz))*60
-                             + EXTRACT(MINUTE FROM (i.starts_at AT TIME ZONE b.tz)))::int AS start_min,
-                         (EXTRACT(HOUR FROM (i.ends_at   AT TIME ZONE b.tz))*60
-                             + EXTRACT(MINUTE FROM (i.ends_at   AT TIME ZONE b.tz)))::int AS end_min,
-                         (i.starts_at AT TIME ZONE b.tz)::date AS local_date,
-                         i.starts_at, i.ends_at
-                     FROM base b, input i
-                 ),
-                 allowed_by_exception AS (
-                     SELECT l.coach_id
-                     FROM local_times l
-                              JOIN public.coach_availability_exceptions e
-                                   ON e.coach_id = l.coach_id
-                                       AND e.date = l.local_date
-                                       AND e.is_available = true
-                                       AND e.start_minute <= l.start_min
-                                       AND e.end_minute   >= l.end_min
-                 ),
-                 allowed_by_rules AS (
-                     SELECT DISTINCT l.coach_id
-                     FROM local_times l
-                              JOIN public.coach_availability_rules r
-                                   ON r.coach_id = l.coach_id
-                                       AND r.is_active = true
-                                       AND r.weekday = l.dow
-                                       AND r.start_minute <= l.start_min
-                                       AND r.end_minute   >= l.end_min
-                     WHERE NOT EXISTS (
-                         SELECT 1 FROM public.coach_availability_exceptions e
-                         WHERE e.coach_id = l.coach_id AND e.date = l.local_date
-                     )
-                 ),
-                 time_ok AS (
-                     SELECT coach_id FROM allowed_by_exception
-                     UNION
-                     SELECT coach_id FROM allowed_by_rules
-                 ),
-                 not_overlapping AS (
-                     SELECT l.coach_id, l.email
-                     FROM local_times l
-                              JOIN time_ok t USING (coach_id)
-                     WHERE NOT EXISTS (
-                         SELECT 1
-                         FROM public.appointments a
-                         WHERE a.coach_id = l.coach_id
-                           AND a.status IN ('scheduled','confirmed')
-                           AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(l.starts_at, l.ends_at, '[)')
-                     )
-                 )
-            SELECT coach_id AS "coachId", email FROM not_overlapping;
-        `
+      WITH input AS (
+        SELECT
+          ${Number(reqRow.serviceId)}::bigint AS service_id,
+          ${reqRow.startsAt}::timestamptz     AS starts_at,
+          ${reqRow.endsAt}::timestamptz       AS ends_at
+      ),
+      base AS (
+        SELECT
+          c.id AS coach_id,
+          c.email,
+          COALESCE(NULLIF(c.timezone, ''), 'Europe/Paris') AS tz
+        FROM public.coaches c
+        JOIN public.coach_services cs ON cs.coach_id = c.id
+        JOIN input i ON i.service_id = cs.service_id
+        WHERE c.is_active = true
+      ),
+      local_times AS (
+        SELECT
+          b.*,
+          EXTRACT(DOW FROM (i.starts_at AT TIME ZONE b.tz))::int AS dow,
+          (EXTRACT(HOUR FROM (i.starts_at AT TIME ZONE b.tz)) * 60 + EXTRACT(MINUTE FROM (i.starts_at AT TIME ZONE b.tz)))::int AS start_min,
+          (EXTRACT(HOUR FROM (i.ends_at AT TIME ZONE b.tz)) * 60 + EXTRACT(MINUTE FROM (i.ends_at AT TIME ZONE b.tz)))::int AS end_min,
+          (i.starts_at AT TIME ZONE b.tz)::date AS local_date,
+          i.starts_at,
+          i.ends_at
+        FROM base b, input i
+      ),
+      allowed_by_exception AS (
+        SELECT l.coach_id
+        FROM local_times l
+        JOIN public.coach_availability_exceptions e
+          ON e.coach_id = l.coach_id
+         AND e.date = l.local_date
+         AND e.is_available = true
+         AND e.start_minute <= l.start_min
+         AND e.end_minute >= l.end_min
+      ),
+      allowed_by_rules AS (
+        SELECT DISTINCT l.coach_id
+        FROM local_times l
+        JOIN public.coach_availability_rules r
+          ON r.coach_id = l.coach_id
+         AND r.is_active = true
+         AND r.weekday = l.dow
+         AND r.start_minute <= l.start_min
+         AND r.end_minute >= l.end_min
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM public.coach_availability_exceptions e
+          WHERE e.coach_id = l.coach_id
+            AND e.date = l.local_date
+        )
+      ),
+      time_ok AS (
+        SELECT coach_id FROM allowed_by_exception
+        UNION
+        SELECT coach_id FROM allowed_by_rules
+      ),
+      not_overlapping AS (
+        SELECT l.coach_id, l.email
+        FROM local_times l
+        JOIN time_ok t USING (coach_id)
+        WHERE NOT EXISTS (
+          SELECT 1
+          FROM public.appointments a
+          WHERE a.coach_id = l.coach_id
+            AND a.status IN ('scheduled', 'confirmed')
+            AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(l.starts_at, l.ends_at, '[)')
+        )
+      )
+      SELECT coach_id AS "coachId", email
+      FROM not_overlapping;
+    `
 
-        // 6) Enregistrer candidats + tokens
+        // 6) Enregistrer candidats + tokens & préparer emails
         let queuedEmails = 0
         let emailRows: Array<{ to_email: string; subject: string; html: string }> = []
 
+        // Toujours construire l'HTML admin (sans boutons)
+        const adminHtml = renderBookingEmail({
+            brand: "MoviLab",
+            fullName,
+            customerEmail: emailSafe,
+            customerPhone: phone ?? null,
+            serviceName: svc.name,
+            servicePrice: Number(svc.price),
+            durationMinutes: svcDuration,
+            startsAtISO: String(reqRow.startsAt),
+            // pas d'accept/decline pour l'admin
+            notes: notes ?? undefined,
+            supplements: chosenSupps,
+        })
+
+        // Ajouter systématiquement les emails fallback admin
+        for (const adminTo of fallbackEmails) {
+            emailRows.push({
+                to_email: adminTo,
+                subject:
+                    Array.isArray(candidates) && candidates.length > 0
+                        ? "Nouvelle demande de RDV (coachs notifiés)"
+                        : "Nouvelle demande de RDV (aucun coach dispo)",
+                html: adminHtml,
+            })
+        }
+
         if (Array.isArray(candidates) && candidates.length > 0) {
+            // Si on a des coachs → on a besoin d'un baseUrl pour générer les liens d'action
+            if (!baseUrl) {
+                return NextResponse.json(
+                    { error: "Server misconfigured: NEXT_PUBLIC_APP_URL missing" },
+                    { status: 500 }
+                )
+            }
+
             const coachIds = candidates.map((c) => Number(c.coachId)).filter(Number.isFinite)
 
             if (coachIds.length > 0) {
                 const inserted = await sql/* sql */`
-                    WITH to_ins AS (
-                        SELECT UNNEST(${coachIds}::bigint[]) AS coach_id
-                    ),
-                         ins AS (
-                    INSERT INTO public.appointment_candidates (request_id, coach_id)
-                    SELECT ${requestId}::bigint, t.coach_id
-                    FROM to_ins t
-                        ON CONFLICT (request_id, coach_id) DO NOTHING
-            RETURNING coach_id AS "coachId", decision_token AS "decisionToken"
-          ),
-          existing AS (
-                    SELECT coach_id AS "coachId", decision_token AS "decisionToken"
-                    FROM public.appointment_candidates
-                    WHERE request_id = ${requestId}::bigint
-                      AND coach_id IN (SELECT coach_id FROM to_ins)
-                        )
-                    SELECT "coachId", "decisionToken" FROM ins
-                    UNION ALL
-                    SELECT "coachId", "decisionToken" FROM existing;
-                `
+          WITH to_ins AS (SELECT UNNEST(${coachIds}::bigint[]) AS coach_id),
+               ins AS (
+                 INSERT INTO public.appointment_candidates (request_id, coach_id)
+                 SELECT ${requestId}::bigint, t.coach_id
+                 FROM to_ins t
+                 ON CONFLICT (request_id, coach_id) DO NOTHING
+                 RETURNING coach_id AS "coachId", decision_token AS "decisionToken"
+               ),
+               existing AS (
+                 SELECT coach_id AS "coachId", decision_token AS "decisionToken"
+                 FROM public.appointment_candidates
+                 WHERE request_id = ${requestId}::bigint
+                   AND coach_id IN (SELECT coach_id FROM to_ins)
+               )
+          SELECT "coachId", "decisionToken" FROM ins
+          UNION ALL
+          SELECT "coachId", "decisionToken" FROM existing;
+        `
 
                 const tokenByCoach: Record<number, string> = Object.fromEntries(
                     inserted.map((r: any) => [Number(r.coachId), String(r.decisionToken)])
                 )
                 console.log("[BOOKING] tokenByCoach map:", tokenByCoach)
 
-                // Récupération des suppléments choisis pour le récap email
-                let chosenSupps: EmailSupplement[] = []
-                if (supplementIds.length > 0) {
-                    try {
-                        const suppRows = await sql/* sql */`
-                            SELECT id::int, name, COALESCE(price,0)::numeric AS price
-                            FROM public.supplements
-                            WHERE id = ANY(${supplementIds}::int[])
-                              AND is_active = true
-                            ORDER BY name;
-                        `
-                        chosenSupps = (suppRows || []).map((r: any) => ({
-                            id: Number(r.id),
-                            name: String(r.name),
-                            price: Number(r.price),
-                        }))
-                    } catch (e) {
-                        console.warn("[BOOKING] failed to fetch supplements for email recap", e)
-                    }
-                }
-
-                // construire les emails à envoyer (template pro)
-                emailRows = candidates
+                const coachEmails = candidates
                     .filter((c) => {
                         const idNum = Number(c?.coachId)
                         const keep = Number.isFinite(idNum) && !!tokenByCoach[idNum] && String(c.email || "").length > 0
@@ -532,70 +569,75 @@ export async function POST(req: NextRequest) {
                         }
                     })
 
-                console.log("[BOOKING] emailRows prepared (count):", emailRows.length)
+                emailRows.push(...coachEmails)
+            }
+        } else {
+            console.log("[BOOKING] no candidates -> only admin notified")
+        }
 
-                if (emailRows.length > 0) {
-                    // Insert outbox (bulk)
-                    const toEmails = emailRows.map((e) => e.to_email)
-                    const subjects = emailRows.map((e) => e.subject)
-                    const htmls = emailRows.map((e) => e.html)
+        // Queue d’envoi: outbox + SMTP + mark sent
+        if (emailRows.length > 0) {
+            const toEmails = emailRows.map((e) => e.to_email)
+            const subjects = emailRows.map((e) => e.subject)
+            const htmls = emailRows.map((e) => e.html)
 
-                    console.log("[BOOKING] bulk insert to email_outbox with UNNEST")
-                    const outbox = await sql/* sql */`
-                        INSERT INTO public.email_outbox (to_email, subject, html)
-                        SELECT t.email, t.subject, t.html
-                        FROM UNNEST(
-                                     ${toEmails}::text[],
-                                     ${subjects}::text[],
-                                     ${htmls}::text[]
-                             ) AS t(email, subject, html)
-                            RETURNING id, to_email, subject, sent_at
-                    `
-                    console.log("[BOOKING] email_outbox inserted:", outbox)
-                    queuedEmails = emailRows.length
+            console.log("[BOOKING] bulk insert to email_outbox with UNNEST")
+            await sql/* sql */`
+        INSERT INTO public.email_outbox (to_email, subject, html)
+        SELECT t.email, t.subject, t.html
+        FROM UNNEST(
+          ${toEmails}::text[],
+          ${subjects}::text[],
+          ${htmls}::text[]
+        ) AS t(email, subject, html)
+      `
+            queuedEmails = emailRows.length
 
-                    // Envoi réel + marquage sent_at
-                    for (const e of emailRows) {
-                        console.log("[BOOKING] sending email via OVH:", { to: e.to_email, subject: e.subject })
-                        try {
-                            const info = await sendMail(e.to_email, e.subject, e.html)
-                            console.log("[BOOKING] SMTP response:", {
-                                messageId: info?.messageId,
-                                accepted: info?.accepted,
-                                rejected: info?.rejected,
-                                response: info?.response,
-                            })
+            for (const e of emailRows) {
+                console.log("[BOOKING] sending email via OVH:", { to: e.to_email, subject: e.subject })
+                try {
+                    const info = await sendMail(e.to_email, e.subject, e.html)
+                    console.log("[BOOKING] SMTP response:", {
+                        messageId: info?.messageId,
+                        accepted: info?.accepted,
+                        rejected: info?.rejected,
+                        response: info?.response,
+                    })
 
-                            await sql/* sql */`
-                                UPDATE public.email_outbox
-                                SET sent_at = now()
-                                WHERE to_email = ${e.to_email}
-                                  AND subject  = ${e.subject}
-                                  AND sent_at IS NULL
-                                    ORDER BY id DESC
-                LIMIT 1;
-                            `
-                            console.log("[BOOKING] email_outbox marked sent for", e.to_email)
-                        } catch (err) {
-                            console.error("[BOOKING] sendMail FAILED for", e.to_email, err)
-                            // sent_at reste NULL => retry possible
-                        }
-                    }
-                } else {
-                    console.log("[BOOKING] no email rows to queue")
+                    await sql/* sql */`
+  UPDATE public.email_outbox eo
+  SET sent_at = now()
+  FROM (
+    SELECT id
+    FROM public.email_outbox
+    WHERE to_email = ${e.to_email}
+      AND subject = ${e.subject}
+      AND sent_at IS NULL
+    ORDER BY id DESC
+    LIMIT 1
+  ) t
+  WHERE eo.id = t.id;
+          `
+                    console.log("[BOOKING] email_outbox marked sent for", e.to_email)
+                } catch (err) {
+                    console.error("[BOOKING] sendMail FAILED for", e.to_email, err)
                 }
             }
         } else {
-            console.log("[BOOKING] no candidates -> skip")
+            console.log("[BOOKING] no email rows to queue")
         }
 
-        // ✅ Réponse API
+        const none = !Array.isArray(candidates) || candidates.length === 0
+
         return NextResponse.json(
             {
                 requestId,
                 clientId,
                 candidates: (candidates || []).map((c) => Number(c.coachId)),
                 queuedEmails,
+                info: none
+                    ? "Demande reçue. Aucun coach immédiatement disponible, l’équipe a été notifiée et vous recontactera."
+                    : "Demande envoyée aux coachs disponibles. Vous recevrez une confirmation rapidement.",
             },
             { status: 201 }
         )
