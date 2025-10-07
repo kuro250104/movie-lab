@@ -31,10 +31,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         address: "",
         appointmentDate: "",
         appointmentTime: "",
-        notes: "Pas de commentaire.",            // 👈 valeur par défaut
+        notes: "Pas de commentaire.",
     })
 
-    // ----- RULES (business opening hours, lead time, etc.) -----
     const RULES = {
         openingHours: {
             // 0=Dimanche, 1=Lundi, ... 6=Samedi
@@ -161,7 +160,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             return
         }
 
-        // Final validation against business rules and availability
         if (!isDateAllowed(formData.appointmentDate)) {
             alert("La date choisie n'est pas disponible.")
             return
@@ -182,7 +180,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 email: formData.email,
                 phone: formData.phone || null,
                 serviceId: selectedService.id,
-                startsAt,                       // ex: "2025-09-20T10:00:00+02:00"
+                startsAt,
                 notes: formData.notes?.trim() || "Pas de commentaire.",   // 👈 envoyé à l’API
             }
 
