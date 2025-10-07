@@ -52,12 +52,14 @@ export default function Home() {
     }
     return (
         <main className="flex min-h-screen flex-col text-white">
-            <section className="relative w-full h-[700px] overflow-hidden">
+            <section className="relative w-full min-h-[70svh] md:min-h-[80svh] overflow-hidden">
                 <video
                     autoPlay
                     loop
                     muted
                     playsInline
+                    preload="none"
+                    poster="/poster-hero.jpg"         // optionnel mais recommandé
                     className="absolute inset-0 w-full h-full object-cover object-center"
                 >
                     <source src="/0827.mp4" type="video/mp4" />
@@ -65,32 +67,32 @@ export default function Home() {
                 </video>
 
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
+
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1 }}
-                    className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6"
+                    className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pb-10"
                 >
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5, duration: 1 }}
-                        className="max-w-4xl text-5xl font-extrabold leading-tight md:text-6xl lg:text-7xl bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent"
+                        className="max-w-4xl font-extrabold leading-tight bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent
+                 text-[clamp(2rem,7vw,4.5rem)]"
                     >
                         Transforme tes défis en réussite, progresse en toute sérénité
                     </motion.h1>
+
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8, duration: 0.8 }}
-                        className="mt-8"
+                        className="mt-6"
                     >
                         <Button
                             onClick={() => {
-                                document.getElementById("offers")?.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "start",
-                                })
+                                document.getElementById("offers")?.scrollIntoView({ behavior: "smooth", block: "start" })
                             }}
                             className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-4 px-8 rounded-full text-lg shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer"
                         >
@@ -156,14 +158,16 @@ export default function Home() {
                             {normalizedServices.filter(s => s.is_active).map((svc) => (
                                 <div
                                     key={svc.id}
-                                    className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 shadow-2xl border  border-gray-800 mb-8"
+                                    className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 shadow-2xl border border-gray-800 mb-8"
                                 >
                                     <div className="flex items-start justify-between gap-4 mb-4">
                                         <h3 className="text-2xl font-bold text-white">{svc.name}</h3>
                                     </div>
 
                                     {svc.description && (
-                                        <p className="text-white mb-6 whitespace-pre-line line-clamp-5">{svc.description}</p>
+                                        <p className="text-white mb-6 whitespace-pre-line line-clamp-5 text-[clamp(0.95rem,3.2vw,1.2rem)] leading-relaxed">
+                                            {svc.description}
+                                        </p>
                                     )}
 
                                     <div className="mt-auto">
