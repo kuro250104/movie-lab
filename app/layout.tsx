@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
 
-    title: "Movi-Lab - Analyse 3D de la course",
+    title: "Movi-lab - Analyse 3D de la course",
     description: "Transforme tes défis en réussite, progresse en toute sérénité avec notre analyse 3D de pointe",
     icons: {
 
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         shortcut: "/favicon.ico",
     },
     appleWebApp: {
-        title: "Movi-Lab",
+        title: "Movi-lab",
         statusBarStyle: "default",
         capable: true
     },

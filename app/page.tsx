@@ -59,7 +59,7 @@ export default function Home() {
                     muted
                     playsInline
                     preload="none"
-                    poster="/poster-hero.jpg"         // optionnel mais recommandé
+                    poster="/poster-hero.jpg"
                     className="absolute inset-0 w-full h-full object-cover object-center"
                 >
                     <source src="/0827.mp4" type="video/mp4" />
@@ -68,7 +68,7 @@ export default function Home() {
 
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80" />
 
-                <motion.div
+                <motion.section
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1 }}
@@ -78,16 +78,26 @@ export default function Home() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5, duration: 1 }}
-                        className="max-w-4xl font-extrabold leading-tight bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent
-                 text-[clamp(2rem,7vw,4.5rem)]"
+                        className="max-w-4xl font-extrabold leading-tight bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent text-[clamp(2rem,7vw,4.5rem)]"
                     >
                         Transforme tes défis en réussite, progresse en toute sérénité
                     </motion.h1>
 
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7, duration: 0.6 }}
+                        className="sr-only"
+                    >
+                        Analyse 3D de la course à Toulouse : bilan biomécanique, prévention des blessures
+                        et amélioration de la performance avec des conseils personnalisés.
+                    </motion.p>
+
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8, duration: 0.8 }}
+                        transition={{ delay: 0.9, duration: 0.8 }}
                         className="mt-6"
                     >
                         <Button
@@ -100,7 +110,7 @@ export default function Home() {
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>
                     </motion.div>
-                </motion.div>
+                </motion.section>
             </section>
             <div className="overflow-hidden border-y border-gray-800 bg-gradient-to-r from-gray-50 to-white py-4 text-black shadow-inner">
                 <Marquee gradient={false} speed={40} className="text-lg font-semibold uppercase tracking-wider">
