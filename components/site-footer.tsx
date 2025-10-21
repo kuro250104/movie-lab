@@ -18,7 +18,7 @@ export function SiteFooter() {
                     <div className="lg:col-span-2">
                         <Link href="/" className="flex items-center gap-3 mb-6">
                             <div className="relative h-12 w-12">
-                                <Image src="/logo.svg" alt="Logo Movilab" fill className="object-contain"/>
+                                <Image src="/logo.svg" title="logo movilab" alt="Logo Movilab" fill className="object-contain"/>
                             </div>
                         </Link>
                         <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">

@@ -55,7 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${BASE_URL}/politique-confidentialite`,lastModified: now, changeFrequency: "yearly",  priority: 0.6 },
     ]
 
-    // Dérive la date de maj si dispo
     const serviceUrls: MetadataRoute.Sitemap = services.map((s) => ({
         url: `${BASE_URL}/services/${s.slug}`,
         lastModified: toDate(s.updated_at),
@@ -70,7 +69,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.5,
     }))
 
-    // Merge + dédup (au cas où)
     const all = [...staticPages, ...serviceUrls, ...coachUrls]
     const unique = Array.from(new Map(all.map(i => [i.url, i])).values())
 

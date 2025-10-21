@@ -20,7 +20,7 @@ export function SiteHeader() {
                 <div className="flex h-20 items-center justify-between px-6 mx-auto max-w-7xl">
                     <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                         <div className="relative h-12 w-12">
-                            <Image src="/logo.svg" alt="Logo Movilab" fill className="object-contain"/>
+                            <Image src="/logo.svg" title="logo movilab" alt="Logo Movilab" fill className="object-contain"/>
                         </div>
                     </Link>
                     <nav className="hidden md:flex gap-8 lg:gap-12">

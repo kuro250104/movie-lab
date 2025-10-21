@@ -1,4 +1,27 @@
+# --- Global ---
 User-agent: *
 Allow: /
+Allow: /_next/static/
+Allow: /_next/image/
+
+Disallow: /admin/
+Disallow: /api/
+Disallow: /preview/
+Disallow: /draft/
+Disallow: /private/
+
+Disallow: /search
+Disallow: /*?*q=
+Disallow: /*?*page=
+
+Disallow: /*?*utm_
+Disallow: /*?*gclid=
+Disallow: /*?*fbclid=
+Disallow: /*?*ref=
+
+Disallow: /404
+Disallow: /500
 
 Sitemap: https://movi-lab.fr/sitemap.xml
+
+Clean-param: utm_source&utm_medium&utm_campaign&utm_term&utm_content&gclid&fbclid&ref
