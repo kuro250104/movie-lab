@@ -6,7 +6,6 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { BookingModal } from "@/components/booking-modal"
 import {ArrowLeft, Clock, Calendar, Target, Zap, Icon} from "lucide-react"
 import { sneaker } from '@lucide/lab';
 import {PersonSimpleRun, PersonSimple, SneakerMove, Note, Barbell} from "@phosphor-icons/react";
@@ -18,6 +17,7 @@ import { LiaUserFriendsSolid } from "react-icons/lia";
 
 import type { ReactNode } from "react"
 import {LoadingPage} from "@/components/loading-spinner";
+import {NewBookingModal} from "@/components/new-booking-modal";
 
 type Service = {
     id: number
@@ -204,7 +204,7 @@ export default function OfferBySlugPage() {
                 </div>
             </section>
             {service && (
-                <BookingModal
+                <NewBookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => setIsBookingModalOpen(false)}
                     selectedService={{
