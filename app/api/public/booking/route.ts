@@ -70,6 +70,8 @@ function renderBookingEmail(opts: {
     const when = new Date(startsAtISO).toLocaleString("fr-FR", {
         dateStyle: "full",
         timeStyle: "short",
+        timeZone: "Europe/Paris"
+
     })
 
     const priceRow = Number.isFinite(Number(servicePrice))
