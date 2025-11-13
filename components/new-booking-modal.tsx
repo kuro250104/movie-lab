@@ -65,7 +65,17 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                 const res = await fetch(`/api/services/supplements/${selectedService.id}`, { cache: "no-store" })
                 if (!res.ok) throw new Error("Failed to load supplements")
                 const rows = (await res.json()) as Supplement[]
-                if (!cancelled) setSupplements(Array.isArray(rows) ? rows.filter(s => s.is_active) : [])
+
+                if (!cancelled) {
+                    const normalized = (Array.isArray(rows) ? rows : [])
+                        .filter(s => s.is_active)
+                        .map(s => ({
+                            ...s,
+                            id: Number(s.id),           // <-- id en number
+                            price: Number(s.price) || 0 // <-- price en number
+                        }))
+                    setSupplements(normalized)
+                }
             } catch (e: any) {
                 if (!cancelled) {
                     setSupplements([])
@@ -85,7 +95,6 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
     const RULES = {
         // 0=dim, 1=lun, ... 6=sam
         openingHours: {
-            1: [], 2: [], 3: [], 4: [],
             5: [["14:00","17:00"]],
             6: [["09:00","12:00"]],
             0: [],
@@ -203,6 +212,14 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
 
     const total = servicePrice + supplementsTotal
 
+    const formatEUR = (n: number) =>
+        new Intl.NumberFormat("fr-FR", {
+            style: "currency",
+            currency: "EUR",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(Number.isFinite(n) ? n : 0)
+
     // ---------- SUBMIT ----------
     const buildStartsAtWithOffset = (date: string, time: string) => {
         const local = new Date(`${date}T${time}:00`)
@@ -235,13 +252,6 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
         try {
             const startsAt = buildStartsAtWithOffset(formData.appointmentDate, formData.appointmentTime)
 
-            // Enrichir les notes avec le détail des suppléments (en attendant un vrai backend de pricing/stockage)
-            const supplementsNote = formData.selectedSupplements.length
-                ? `\n\nSuppléments choisis: ${formData.selectedSupplements
-                    .map(id => supplements.find(s => s.id === id)?.name)
-                    .filter(Boolean)
-                    .join(", ")} (total options +${supplementsTotal}€)`
-                : ""
 
             const payload = {
                 firstName: formData.firstName,
@@ -250,8 +260,10 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                 phone: formData.phone || null,
                 serviceId: selectedService.id,
                 startsAt,
-                notes: (formData.notes?.trim() || "Pas de commentaire.") + supplementsNote,
+                notes: (formData.notes?.trim() || "Pas de commentaire.") ,
+                supplementIds: formData.selectedSupplements,
             }
+            console.log("payload sent :",  payload)
 
             const resp = await fetch("/api/public/booking", {
                 method: "POST",
@@ -396,7 +408,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                                             </div>
                                             <div className="flex items-center gap-1 font-bold text-orange-600">
                                                 <Euro className="w-4 h-4" />
-                                                {selectedService.price}
+                                                {formatEUR(servicePrice)}
                                             </div>
                                         </div>
                                     </div>
@@ -536,7 +548,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                                                     </div>
 
                                                     <span className="shrink-0 rounded-full border px-3 py-1 text-sm font-medium text-orange-600 border-orange-200 bg-orange-50">
-              +{new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(Number(s.price) || 0)}
+              +{formatEUR(Number(s.price) || 0)}
             </span>
                                                 </div>
                                             </button>
@@ -551,7 +563,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                             <div className="bg-gray-50 p-6 rounded-lg space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span>Service :</span>
-                                    <span className="font-medium">{selectedService.name} — {selectedService.price}€</span>
+                                    <span className="font-medium">{selectedService.name} — {formatEUR(servicePrice)}</span>
                                 </div>
                                 {formData.selectedSupplements.map(id => {
                                     const s = supplements.find(x => x.id === id)
@@ -559,14 +571,14 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                                     return (
                                         <div key={id} className="flex justify-between">
                                             <span>{s.name} :</span>
-                                            <span className="font-medium">+{s.price}€</span>
+                                            <span className="font-medium">+{formatEUR(Number(s.price) || 0)}</span>
                                         </div>
                                     )
                                 })}
                                 <Separator />
                                 <div className="flex justify-between text-lg font-bold text-orange-600">
                                     <span>Total estimé :</span>
-                                    <span>{total}€</span>
+                                    <span>{formatEUR(total)}</span>
                                 </div>
 
                                 <div className="pt-2 text-xs text-gray-500">

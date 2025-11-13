@@ -30,6 +30,7 @@ type Appointment = {
     lastName: string
     firstName: string
     clientEmail: string
+    clientPhone?: string | null    // 👈 ajoute ça
     serviceName: string
     price: number
     status: string
@@ -123,7 +124,7 @@ export default function AppointmentsCalendarPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [showDebug, setShowDebug] = useState(false)
-    const [showRequests, setShowRequests] = useState(true) // <- NEW toggle
+    const [showRequests, setShowRequests] = useState(true)
 
     useEffect(() => {
       setSelectedDate(toLocalYMD(new Date()))
@@ -159,7 +160,6 @@ export default function AppointmentsCalendarPage() {
         }
     }
 
-    // Map des demandes (appointment_requests pending) vers le même type
     const mapRequest = (r: any): Appointment => {
         const startsAt =
             tryDate(r.startsAt) ||
@@ -227,18 +227,36 @@ export default function AppointmentsCalendarPage() {
             const mapped: Appointment[] = (Array.isArray(raw) ? raw : []).map((r: any) => {
                 const startsAt = r.startsAt || r.starts_at
                 const d = startsAt ? new Date(startsAt) : null
-                const date = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}` : (r.date || "")
-                const time = d ? d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : (r.time || "")
+                const date = d
+                    ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+                    : (r.date || "")
+                const time = d
+                    ? d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                    : (r.time || "")
 
                 const isRequest = r.source === "request"
-                // Nom client côté requests : r.customerName (string "Prénom Nom")
-                let firstName = String(r.firstName ?? r.first_name ?? "")
-                let lastName  = String(r.lastName  ?? r.last_name  ?? "")
-                if (isRequest && !firstName && !lastName) {
-                    const full = String(r.customerName ?? r.customer_name ?? "")
-                    const [f, ...rest] = full.split(" ")
-                    firstName = f || ""
-                    lastName = rest.join(" ")
+
+                // 1) lecture directe
+                let firstName = String(r.firstName ?? r.first_name ?? r.clientFirstName ?? "")
+                let lastName  = String(r.lastName  ?? r.last_name  ?? r.clientLastName  ?? "")
+
+                // 2) fallback commun (appointments & requests) depuis customer_name
+                if ((!firstName || !lastName)) {
+                    const full = String(r.customerName ?? r.customer_name ?? "").trim()
+                    if (full) {
+                        const parts = full.split(/\s+/)
+                        if (!firstName && parts.length > 0) firstName = parts[0]
+                        if (!lastName && parts.length > 1)  lastName  = parts.slice(1).join(" ")
+                    }
+                }
+
+                // 3) dernier fallback: dériver depuis l'email (avant @)
+                const email =
+                    String(r.clientEmail ?? r.customer_email ?? r.client_email ?? r.email ?? "")
+                const phone =
+                    r.clientPhone ?? r.customer_phone ?? r.client_phone ?? r.phone ?? null  // 👈 on le déclare ici
+                if ((!firstName && !lastName) && email.includes("@")) {
+                    firstName = email.split("@")[0] || ""
                 }
 
                 return {
@@ -247,7 +265,8 @@ export default function AppointmentsCalendarPage() {
                     time,
                     firstName,
                     lastName,
-                    clientEmail: String(r.customerEmail ?? r.customer_email ?? r.clientEmail ?? ""),
+                    clientEmail: email,
+                    clientPhone: phone,
                     serviceName: String(r.serviceName ?? r.service_name ?? ""),
                     price: Number(r.servicePrice ?? r.price ?? 0),
                     status: isRequest ? "En attente coach" : String(r.status ?? ""),
@@ -256,7 +275,6 @@ export default function AppointmentsCalendarPage() {
                     source: isRequest ? "request" : "appointment",
                 }
             })
-
             setAppointments(mapped)
         } catch (e: any) {
             console.error("Erreur chargement:", e)
@@ -563,15 +581,24 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}</pre>
                                                 return (
                                                     <div key={`${apt.source}-${apt.id}-${idx}`} className={`p-3 rounded-lg ${isRequest ? "bg-amber-50 border border-dashed border-amber-200" : "bg-gray-50"}`}>
                                                         <div className="flex items-start justify-between mb-2">
-                                                            <div>
+                                                            <div className="space-y-1">
                                                                 <div className="font-medium text-sm">
-                                                                    {(apt.firstName || apt.lastName) ? `${apt.firstName} ${apt.lastName}`.trim() : "Client"}
+                                                                    {(apt.firstName || apt.lastName)
+                                                                        ? `${apt.firstName} ${apt.lastName}`.trim()
+                                                                        : "Client"}
                                                                 </div>
                                                                 <div className="text-xs text-gray-600 flex items-center gap-1">
                                                                     <Clock className="w-3 h-3" />
                                                                     {apt.time}
                                                                 </div>
+                                                                {(apt.clientEmail || apt.clientPhone) && (
+                                                                    <div className="text-[11px] text-gray-500 flex gap-2 flex-wrap">
+                                                                        {apt.clientEmail && <span>{apt.clientEmail}</span>}
+                                                                        {apt.clientPhone && <span>{apt.clientPhone}</span>}
+                                                                    </div>
+                                                                )}
                                                             </div>
+
                                                             <Badge className={getStatusColor(apt.status)} variant="outline">
                                                                 {apt.status || (isRequest ? "En attente coach" : "—")}
                                                             </Badge>
@@ -600,24 +627,24 @@ currentMonth=${currentDate.getMonth()+1}/${currentDate.getFullYear()}`}</pre>
                                                             </div>
                                                         )}
 
-                                                        <div className="flex gap-1 mt-2">
-                                                            {isRequest ? (
-                                                                <Button size="sm" variant="outline" className="h-6 text-xs bg-transparent">
-                                                                    <Plus className="w-3 h-3 mr-1" />
-                                                                    Assigner un coach
-                                                                </Button>
-                                                            ) : (
-                                                                <>
-                                                                    <Button size="sm" variant="outline" className="h-6 text-xs bg-transparent">
-                                                                        <Edit className="w-3 h-3 mr-1" />
-                                                                        Modifier
-                                                                    </Button>
-                                                                    <Button size="sm" variant="outline" className="h-6 text-xs text-red-600 bg-transparent">
-                                                                        <Trash2 className="w-3 h-3" />
-                                                                    </Button>
-                                                                </>
-                                                            )}
-                                                        </div>
+                                                        {/*<div className="flex gap-1 mt-2">*/}
+                                                        {/*    {isRequest ? (*/}
+                                                        {/*        <Button size="sm" variant="outline" className="h-6 text-xs bg-transparent">*/}
+                                                        {/*            <Plus className="w-3 h-3 mr-1" />*/}
+                                                        {/*            Assigner un coach*/}
+                                                        {/*        </Button>*/}
+                                                        {/*    ) : (*/}
+                                                        {/*        <>*/}
+                                                        {/*            <Button size="sm" variant="outline" className="h-6 text-xs bg-transparent">*/}
+                                                        {/*                <Edit className="w-3 h-3 mr-1" />*/}
+                                                        {/*                Modifier*/}
+                                                        {/*            </Button>*/}
+                                                        {/*            <Button size="sm" variant="outline" className="h-6 text-xs text-red-600 bg-transparent">*/}
+                                                        {/*                <Trash2 className="w-3 h-3" />*/}
+                                                        {/*            </Button>*/}
+                                                        {/*        </>*/}
+                                                        {/*    )}*/}
+                                                        {/*</div>*/}
                                                     </div>
                                                 )
                                             })}

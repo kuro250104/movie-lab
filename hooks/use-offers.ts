@@ -22,8 +22,7 @@ export function useOffers() {
                 const res = await fetch("/api/services", { cache: "no-store" })
                 if (!res.ok) throw new Error("Erreur API services")
                 const data = await res.json()
-                setServices(data.services || [])
-            } catch (err) {
+                setServices(Array.isArray(data) ? data : [])            } catch (err) {
                 console.error("Erreur récupération offers :", err)
             } finally {
                 setLoading(false)

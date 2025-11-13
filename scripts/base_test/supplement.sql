@@ -23,3 +23,8 @@ CREATE TABLE IF NOT EXISTS public.appointment_request_supplements (
     price_at_booking NUMERIC(10,2) NOT NULL,
     PRIMARY KEY (request_id, supplement_id)
     );
+
+
+
+ALTER TABLE public.appointment_requests
+    ADD COLUMN client_id bigint REFERENCES public.clients(id);

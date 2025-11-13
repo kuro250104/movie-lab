@@ -94,7 +94,7 @@
   "directories": {
     "lib": "lib"
   },
-  "keywords": [],
+  "keywords": ["movilab"],
   "author": "Kuro",
   "license": "ISC",
   "description": ""

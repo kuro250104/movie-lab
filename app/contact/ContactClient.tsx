@@ -7,7 +7,7 @@ import {Send, MapPin, Mail, Clock, ArrowLeft} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import {motion} from "framer-motion"
-import {useToast} from "@/hooks/use-toast" // si tu as le toast shadcn (tu l'as dans ton repo)
+import {useToast} from "@/hooks/use-toast"
 
 type FormState = {
     firstName: string
@@ -59,7 +59,6 @@ export default function ContactClient() {
 
     return (
         <main className="min-h-screen flex flex-col text-white">
-            {/* HERO */}
             <section className="relative w-full h-[600px] overflow-hidden">
                 <Image src="/blurred-runner-track.png" alt="Contactez-nous" fill className="object-cover object-center scale-105" priority />
                 <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/80" />
@@ -125,7 +124,6 @@ export default function ContactClient() {
                 </div>
             </section>
 
-            {/* FORM */}
             <section className="py-24 bg-gradient-to-br from-gray-900 to-black text-white">
                 <div className="px-6 max-w-4xl mx-auto">
                     <motion.div initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="text-center mb-16">

@@ -168,12 +168,6 @@ export default function AdminDashboard() {
                                 <Link href="/admin/appointments">
                                     <Button className="bg-orange-600 hover:bg-orange-700">Planning</Button>
                                 </Link>
-                                <Link href="/admin/appointments/new">
-                                    <Button variant="outline">
-                                        <CalendarPlus className="w-4 h-4 mr-2"/>
-                                        Nouveau RDV
-                                    </Button>
-                                </Link>
                             </div>
                         </CardContent>
                     </Card>

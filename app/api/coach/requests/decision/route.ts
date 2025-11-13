@@ -1,5 +1,6 @@
 // app/api/coach/requests/decision/route.ts
 export const dynamic = "force-dynamic"
+export const runtime = "nodejs";
 
 import { sql } from "@/lib/db"
 
@@ -59,6 +60,12 @@ function splitName(fullName: string | null | undefined) {
     return { first: parts[0], last: parts.slice(1).join(" ") }
 }
 
+function isValidEmail(e: string | null | undefined) {
+    const s = (e ?? "").trim()
+    if (!s) return false
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s)
+}
+
 // ---------- Handler ----------
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
@@ -96,7 +103,6 @@ export async function GET(req: Request) {
             return htmlPage("Lien expiré", "Ce lien n’est plus valide ou a déjà été utilisé.", false)
         }
 
-        // Déjà répondu ?
         if (row.candidateDecision && row.candidateDecision !== "pending") {
             return htmlPage("Déjà traité", "Vous avez déjà répondu à cette demande.", false)
         }
@@ -131,58 +137,113 @@ export async function GET(req: Request) {
                 FROM public.appointments
                 WHERE coach_id = ${row.coachId}
                   AND status IN ('scheduled','confirmed')
-                  AND tstzrange(starts_at, ends_at, '[)') &&
-                    tstzrange(${row.startsAt}::timestamptz, ${row.endsAt}::timestamptz, '[)');
+                  AND tstzrange(starts_at, ends_at, '[)')
+                      && tstzrange(${reqRow.starts_at}::timestamptz, ${reqRow.ends_at}::timestamptz, '[)');
             `
             if ((conflict?.[0]?.count ?? 0) > 0) {
                 return { ok: false, code: "time_conflict" as const }
             }
 
-            // 3) Upsert client
+            // 3) Upsert client (robuste, normalise l'email, backfill request.client_id si colonne présente)
             let clientId: number | null = row.clientId ?? null
+            const normEmail = (row.customerEmail ?? "").trim()
+
             if (!clientId) {
-                if (!row.customerEmail) return { ok: false, code: "missing_email" as const }
+                if (!isValidEmail(normEmail)) {
+                    // Email invalide -> on ne crée pas de client, mais on laisse la création du RDV possible avec client_id NULL si autorisé
+                    // Ici on force l'arrêt car la suite de l'app s'attend à un client_id valide
+                    return { ok: false, code: "missing_email" as const }
+                }
+
                 const { first, last } = splitName(row.customerName)
-                const upsert = await trx/* sql */`
-                    WITH ins AS (
-                    INSERT INTO public.clients (first_name, last_name, email)
-                    SELECT ${first}, ${last}, ${row.customerEmail}
-                        WHERE NOT EXISTS (
-              SELECT 1 FROM public.clients WHERE lower(email) = lower(${row.customerEmail})
-                        )
-                        RETURNING id
-                        )
-                    SELECT id FROM ins
-                    UNION ALL
-                    SELECT id FROM public.clients WHERE lower(email) = lower(${row.customerEmail})
-                        LIMIT 1;
+
+                // Tente de retrouver un client par email (case-insensitive)
+                const existing = await trx/* sql */`
+                    SELECT id, first_name, last_name
+                    FROM public.clients
+                    WHERE lower(email) = lower(${normEmail})
+                    LIMIT 1;
                 `
-                clientId = Number(upsert?.[0]?.id ?? 0) || null
+
+                if (existing?.length) {
+                    clientId = Number(existing[0].id)
+
+                    // Complète/écrase uniquement si valeurs non vides
+                    await trx/* sql */`
+                        UPDATE public.clients
+                        SET first_name = COALESCE(NULLIF(${first}, ''), first_name),
+                            last_name  = COALESCE(NULLIF(${last},  ''), last_name)
+                        WHERE id = ${clientId};
+                    `
+                } else {
+                    // Insère un nouveau client
+                    const ins = await trx/* sql */`
+                        INSERT INTO public.clients (first_name, last_name, email)
+                        VALUES (${first}, ${last}, ${normEmail})
+                        RETURNING id;
+                    `
+                    clientId = Number(ins?.[0]?.id ?? 0) || null
+                }
+
                 if (!clientId) return { ok: false, code: "client_upsert_failed" as const }
+
+                // Backfill: si la colonne client_id existe sur appointment_requests, on la met à jour (sans DO $$)
+                const hasClientIdCol = await trx/* sql */`
+                  SELECT 1
+                  FROM information_schema.columns
+                  WHERE table_schema = 'public'
+                    AND table_name = 'appointment_requests'
+                    AND column_name = 'client_id'
+                  LIMIT 1;
+                `
+                if (hasClientIdCol.length) {
+                  await trx/* sql */`
+                    UPDATE public.appointment_requests
+                    SET client_id = ${clientId}
+                    WHERE id = ${row.requestId};
+                  `
+                }
             }
 
             // 4) Créer le rendez-vous (scheduled par défaut)
-            const appt = await trx/* sql */`
-                INSERT INTO public.appointments (client_id, coach_id, service_id, starts_at, ends_at, status)
-                VALUES (
-                           ${clientId},
-                           ${row.coachId},
-                           ${row.serviceId},
-                           ${row.startsAt}::timestamptz,
-                           ${row.endsAt}::timestamptz,
-                           'scheduled'
-                       )
-                    RETURNING id;
-            `
-            const apptId = Number(appt?.[0]?.id ?? 0)
-            if (!apptId) return { ok: false, code: "appointment_insert_failed" as const }
+            // INSÉRER le RDV une seule fois par request_id
+            const apptIns = await trx/* sql */`
+                INSERT INTO public.appointments
+                (request_id, client_id, coach_id, service_id, starts_at, ends_at, status)
+                VALUES
+                    (${row.requestId}, ${clientId}, ${row.coachId}, ${row.serviceId},
+                     ${reqRow.starts_at}::timestamptz, ${reqRow.ends_at}::timestamptz, 'scheduled')
+                ON CONFLICT (request_id) DO NOTHING
+                RETURNING id;
+            `;
 
-            // 5) Marquer la request acceptée
+            const apptId = Number(apptIns?.[0]?.id ?? 0);
+            if (!apptId) {
+                return { ok: false, code: "already_decided" as const }; // déjà créé
+            }
+
             await trx/* sql */`
-                UPDATE public.appointment_requests
-                SET status = 'matched'
-                WHERE id = ${row.requestId};
+  UPDATE public.appointment_requests
+  SET status = 'matched'
+  WHERE id = ${row.requestId};
+`;
+
+            // (Optionnel) Backfill request_id dans appointments si la colonne existe (sans DO $$)
+            const hasRequestIdCol = await trx/* sql */`
+              SELECT 1
+              FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'appointments'
+                AND column_name = 'request_id'
+              LIMIT 1;
             `
+            if (hasRequestIdCol.length) {
+              await trx/* sql */`
+                UPDATE public.appointments
+                SET request_id = ${row.requestId}
+                WHERE id = ${apptId};
+              `
+            }
 
             // 6) Marquer les décisions candidats (audit friendly)
             await trx/* sql */`
@@ -196,7 +257,7 @@ export async function GET(req: Request) {
             SET decision = 'auto_declined', decided_at = now()
             WHERE request_id = ${row.requestId}
               AND id <> ${row.candidateId}
-              AND decision IS NULL;
+              AND (decision IS NULL OR decision = 'pending');
                 `
 
             return { ok: true, apptId }

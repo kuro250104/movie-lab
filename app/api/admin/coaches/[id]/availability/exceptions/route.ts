@@ -11,11 +11,11 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         SELECT
             id,
             date::text      AS date,
-      start_minute,
-      end_minute,
-      is_available,
-      note,
-      created_at
+            start_minute,
+            end_minute,
+            is_available,
+            note,
+            created_at
         FROM public.coach_availability_exceptions
         WHERE coach_id = ${coachId}
         ORDER BY date DESC, start_minute NULLS FIRST
@@ -41,24 +41,25 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         }
     }
 
+    // 🔁 On force "1 ligne par coach + date" sans ON CONFLICT :
+    await sql/* sql */`
+        DELETE FROM public.coach_availability_exceptions
+        WHERE coach_id = ${coachId} AND date = ${date}::date
+    `
+
     const rows = await sql/* sql */`
         INSERT INTO public.coach_availability_exceptions
             (coach_id, date, start_minute, end_minute, is_available, note)
         VALUES
             (${coachId}, ${date}::date, ${startMinute}, ${endMinute}, ${!!isAvailable}, ${note})
-            ON CONFLICT (coach_id, date) DO UPDATE SET
-            start_minute = EXCLUDED.start_minute,
-                                                end_minute   = EXCLUDED.end_minute,
-                                                is_available = EXCLUDED.is_available,
-                                                note         = EXCLUDED.note
-                                                RETURNING
-                                                id,
-                                                date::text      AS date,
-                                                start_minute,
-                                                end_minute,
-                                                is_available,
-                                                note,
-                                                created_at
+        RETURNING
+            id,
+            date::text      AS date,
+            start_minute,
+            end_minute,
+            is_available,
+            note,
+            created_at
     `
     return NextResponse.json(rows[0], { status: 201 })
 }

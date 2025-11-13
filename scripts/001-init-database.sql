@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS analysis_reports (
 
 -- Insertion des services par défaut
 INSERT INTO services (name, description, price, duration_minutes) VALUES
-('M-Starter', 'Analyse 3D de la foulée, diagnostic personnalisé', 119.00, 60),
+('M-Starter', 'Analyse 3D de la foulée, diagnostic personnalisé', 119.00, 60);
 
 -- Création d'un admin par défaut (mot de passe: admin123)
 INSERT INTO admins (email, password_hash, name) VALUES

@@ -11,7 +11,7 @@ const readline = require('readline')
 const { argv } = require('process')
 
 function parseArgs(argv) {
-    const args = { rounds: 12, password: null }
+    const args = { rounds: 10, password: null }
     for (let i = 2; i < argv.length; i++) {
         const a = argv[i]
         if (a === '-r' || a === '--rounds') {

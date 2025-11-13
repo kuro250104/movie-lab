@@ -83,7 +83,7 @@ export function SiteFooter() {
                                 >
                                     <ArrowRight
                                         className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"/>
-                                    Nos Offres
+                                    Nos ffres
                                 </Link>
                             </li>
                             <li>
