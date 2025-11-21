@@ -17,7 +17,7 @@ import { LiaUserFriendsSolid } from "react-icons/lia";
 
 import type { ReactNode } from "react"
 import {LoadingPage} from "@/components/loading-spinner";
-import {NewBookingModal} from "@/components/new-booking-modal";
+import {BookingModal} from "@/components/booking-modal";
 
 type Service = {
     id: number
@@ -204,7 +204,7 @@ export default function OfferBySlugPage() {
                 </div>
             </section>
             {service && (
-                <NewBookingModal
+                <BookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => setIsBookingModalOpen(false)}
                     selectedService={{
