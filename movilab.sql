@@ -28,7 +28,7 @@ DROP TABLE IF EXISTS public.admins                      CASCADE;
 
 -- 2.1 Admins (compte pour se connecter au back-office)
 CREATE TABLE public.admins (
-                               id BIGSERIAL PRIMARY KEY,                       -- ⚠️ PK + auto-incrément
+                               id BIGSERIAL PRIMARY KEY,
                                email character varying(255) NOT NULL,
                                password_hash character varying(255) NOT NULL,
                                name character varying(255) NOT NULL,
