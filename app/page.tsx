@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ExpertiseCarousel } from "@/components/expertise-carousel"
 import { useOffers } from "@/hooks/use-offers"
 import { LoadingPage } from "@/components/loading-spinner"
-import { NewBookingModal } from "@/components/new-booking-modal"
+import { BookingModal } from "@/components/booking-modal"
 
 const items = [
     "Analyse posturale",
@@ -355,7 +355,7 @@ export default function Home() {
 
             {/* Booking modal */}
             {selectedService && (
-                <NewBookingModal
+                <BookingModal
                     isOpen={isBookingModalOpen}
                     onClose={() => {
                         setIsBookingModalOpen(false)
