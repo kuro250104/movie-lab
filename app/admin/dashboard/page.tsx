@@ -1,10 +1,21 @@
 "use client"
-import {useEffect, useState} from "react"
-import {useRouter} from "next/navigation"
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {Button} from "@/components/ui/button"
-import {Users, Calendar, Euro, TrendingUp, Clock, UserPlus, CalendarPlus, LogOut, PackagePlus} from "lucide-react"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+    Users,
+    Calendar,
+    Euro,
+    TrendingUp,
+    Clock,
+    LogOut,
+    PackagePlus,
+    ShieldCheck,
+} from "lucide-react"
 import Link from "next/link"
+import { FaUserLock } from "react-icons/fa"
 
 interface DashboardStats {
     totalClients: number
@@ -12,6 +23,8 @@ interface DashboardStats {
     monthlyRevenue: number
     todayAppointments: number
 }
+
+type AdminRole = "admin" | "coach"
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState<DashboardStats>({
@@ -21,6 +34,8 @@ export default function AdminDashboard() {
         todayAppointments: 0,
     })
     const [loading, setLoading] = useState(true)
+    const [role, setRole] = useState<AdminRole | null>(null)
+
     const router = useRouter()
 
     useEffect(() => {
@@ -29,12 +44,19 @@ export default function AdminDashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            setStats({
-                totalClients: 45,
-                totalAppointments: 128,
-                monthlyRevenue: 3420,
-                todayAppointments: 3,
+            setLoading(true)
+
+
+            // 🔥 Récupérer le rôle depuis l'API
+            const res = await fetch("/api/admin/me", {
+                credentials: "include",
             })
+            if (res.ok) {
+                const me = await res.json()
+                if (me.role === "admin" || me.role === "coach") {
+                    setRole(me.role)
+                }
+            }
         } catch (error) {
             console.error("Error fetching dashboard data:", error)
         } finally {
@@ -44,18 +66,20 @@ export default function AdminDashboard() {
 
     const handleLogout = async () => {
         try {
-            await fetch("/api/auth/logout", {method: "POST"})
+            await fetch("/api/auth/logout", { method: "POST" })
             router.push("/admin/login")
         } catch (error) {
             console.error("Logout error:", error)
         }
     }
 
+    const isAdmin = role === "admin"
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto" />
                     <p className="mt-4 text-gray-600">Chargement...</p>
                 </div>
             </div>
@@ -68,12 +92,20 @@ export default function AdminDashboard() {
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
-                            <p className="text-gray-600">Bienvenue dans l'administration movi-lab</p>
+                            <h1 className="text-2xl font-bold text-gray-900">
+                                Dashboard Admin
+                            </h1>
+                            <p className="text-gray-600">
+                                Bienvenue dans l&apos;administration movi-lab
+                                {role === "coach" && " — mode coach (accès limité)"}
+                            </p>
                         </div>
-                        <Button onClick={handleLogout} variant="outline"
-                                className="flex items-center gap-2 bg-transparent">
-                            <LogOut className="w-4 h-4"/>
+                        <Button
+                            onClick={handleLogout}
+                            variant="outline"
+                            className="flex items-center gap-2 bg-transparent"
+                        >
+                            <LogOut className="w-4 h-4" />
                             Déconnexion
                         </Button>
                     </div>
@@ -81,97 +113,76 @@ export default function AdminDashboard() {
             </header>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Stats Cards */}
-                {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">*/}
-                {/*    <Card>*/}
-                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
-                {/*            <CardTitle className="text-sm font-medium text-gray-600">Total Clients</CardTitle>*/}
-                {/*            <Users className="h-4 w-4 text-orange-600"/>*/}
-                {/*        </CardHeader>*/}
-                {/*        <CardContent>*/}
-                {/*            <div className="text-2xl font-bold text-gray-900">{stats.totalClients}</div>*/}
-                {/*            <p className="text-xs text-green-600 mt-1">+12% ce mois</p>*/}
-                {/*        </CardContent>*/}
-                {/*    </Card>*/}
-
-                {/*    <Card>*/}
-                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
-                {/*            <CardTitle className="text-sm font-medium text-gray-600">RDV Total</CardTitle>*/}
-                {/*            <Calendar className="h-4 w-4 text-orange-600"/>*/}
-                {/*        </CardHeader>*/}
-                {/*        <CardContent>*/}
-                {/*            <div className="text-2xl font-bold text-gray-900">{stats.totalAppointments}</div>*/}
-                {/*            <p className="text-xs text-green-600 mt-1">+8% ce mois</p>*/}
-                {/*        </CardContent>*/}
-                {/*    </Card>*/}
-
-                {/*    <Card>*/}
-                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
-                {/*            <CardTitle className="text-sm font-medium text-gray-600">CA Mensuel</CardTitle>*/}
-                {/*            <Euro className="h-4 w-4 text-orange-600"/>*/}
-                {/*        </CardHeader>*/}
-                {/*        <CardContent>*/}
-                {/*            <div className="text-2xl font-bold text-gray-900">{stats.monthlyRevenue}€</div>*/}
-                {/*            <p className="text-xs text-green-600 mt-1">+15% ce mois</p>*/}
-                {/*        </CardContent>*/}
-                {/*    </Card>*/}
-
-                {/*    <Card>*/}
-                {/*        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">*/}
-                {/*            <CardTitle className="text-sm font-medium text-gray-600">RDV Aujourd'hui</CardTitle>*/}
-                {/*            <Clock className="h-4 w-4 text-orange-600"/>*/}
-                {/*        </CardHeader>*/}
-                {/*        <CardContent>*/}
-                {/*            <div className="text-2xl font-bold text-gray-900">{stats.todayAppointments}</div>*/}
-                {/*            <p className="text-xs text-gray-600 mt-1">3 séances prévues</p>*/}
-                {/*        </CardContent>*/}
-                {/*    </Card>*/}
-                {/*</div>*/}
+                {/* Si tu veux réactiver les stats un jour */}
+                {/* ... */}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Gestion coach / comptes */}
                     <Card className="hover:shadow-lg transition-shadow">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Users className="w-5 h-5 text-orange-600"/>
+                                <Users className="w-5 h-5 text-orange-600" />
                                 Gestion coach
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-gray-600 mb-4">
-                                Gérer les coachs et affiliations
+                                Gestion des comptes et disponibilités
+                            </p>
+                            <div className="flex gap-2 flex-wrap">
+                                {/* Toujours visible pour les coachs et admins */}
+                                <Link href="/admin/coach">
+                                    <Button className="bg-orange-600 hover:bg-orange-700">
+                                        <FaUserLock className="w-4 h-4 mr-2" />
+                                        Voir les coach
+                                    </Button>
+                                </Link>
+
+                                {/* 🔒 Réservé aux admins : création de comptes */}
+                                {isAdmin && (
+                                    <Link href="/admin/management">
+                                        <Button className="bg-orange-600 hover:bg-orange-700">
+                                            <ShieldCheck className="w-4 h-4 mr-2" />
+                                            Ajouter un compte admin
+                                        </Button>
+                                    </Link>
+                                )}
+
+                                {/* 🔒 Réservé aux admins : création de services */}
+                                {isAdmin && (
+                                    <Link href="/admin/services/new">
+                                        <Button className="bg-orange-600 hover:bg-orange-700">
+                                            <PackagePlus className="w-4 h-4 mr-2" />
+                                            Nouveau service
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* RDV */}
+                    <Card className="hover:shadow-lg transition-shadow">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-orange-600" />
+                                Rendez-vous
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-gray-600 mb-4">
+                                Planifier, modifier et gérer tous les rendez-vous
+                                clients.
                             </p>
                             <div className="flex gap-2">
-                                <Link href="/admin/coach">
-                                    <Button className="bg-orange-600 hover:bg-orange-700">Voir les coach</Button>
-                                </Link>
-                                <Link href="/admin/services/new">
+                                <Link href="/admin/appointments">
                                     <Button className="bg-orange-600 hover:bg-orange-700">
-                                        <PackagePlus className="w-4 h-4 mr-2"/>
-                                        Nouveau service
+                                        Planning
                                     </Button>
                                 </Link>
                             </div>
                         </CardContent>
                     </Card>
-
-                    <Card className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-orange-600"/>
-                                Rendez-vous
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-600 mb-4">Planifier, modifier et gérer tous les rendez-vous
-                                clients.</p>
-                            <div className="flex gap-2">
-                                <Link href="/admin/appointments">
-                                    <Button className="bg-orange-600 hover:bg-orange-700">Planning</Button>
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
-
                 </div>
             </div>
         </div>
