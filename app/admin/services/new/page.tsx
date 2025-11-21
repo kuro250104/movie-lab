@@ -16,6 +16,7 @@ import {Barbell, Note, PersonSimple, PersonSimpleRun, SneakerMove} from "@phosph
 import {GiBackPain, GiLeg} from "react-icons/gi";
 import {ImStatsDots} from "react-icons/im";
 import {LiaUserFriendsSolid} from "react-icons/lia";
+import * as Icons from "lucide-react"
 
 type ServiceItem = { id?: number; service_id?: number; icon: string; title: string; description?: string }
 
@@ -328,19 +329,34 @@ export default function CoachesServicesPage() {
                                                 {s.description && <p className="mt-2 text-sm text-gray-600">{s.description}</p>}
 
                                                 {/* Aperçu des items */}
-                                                {(s.items?.length ?? 0) > 0 && (
+                                                {s.items?.length > 0 && (
                                                     <ul className="mt-3 space-y-1 text-sm text-gray-700">
-                                                        {s.items!.map((it, i) => (
-                                                            <li key={`${it.id ?? i}-${it.title}`} className="flex items-start gap-2">
-                                                                <span className="opacity-70 mt-0.5">{it.icon}</span>
-                                                                <div>
-                                                                    <span className="font-medium">{it.title}</span>
-                                                                    {it.description ? (
-                                                                        <span className="block text-gray-600">{it.description}</span>
-                                                                    ) : null}
-                                                                </div>
-                                                            </li>
-                                                        ))}
+                                                        {s.items.map((it, i) => {
+
+                                                            const icon = iconMap[it.icon] ?? (
+                                                                <span className="w-5 h-5 opacity-50">•</span>
+                                                            )
+
+                                                            return (
+                                                                <li
+                                                                    key={`${it.id ?? i}-${it.title}`}
+                                                                    className="flex items-start gap-2"
+                                                                >
+                                                                    {/* Icône */}
+                                                                    <span className="mt-0.5">{icon}</span>
+
+                                                                    <div>
+                                                                        <span className="font-medium">{it.title}</span>
+
+                                                                        {it.description && (
+                                                                            <span className="block text-gray-600">
+                                {it.description}
+                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </li>
+                                                            )
+                                                        })}
                                                     </ul>
                                                 )}
                                             </div>
