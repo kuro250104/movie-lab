@@ -21,7 +21,6 @@ export async function hashPassword(password: string): Promise<string> {
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
     return bcrypt.compare(password, hash)
 }
-
 export async function generateToken(user: AdminUser): Promise<string> {
     return await new SignJWT({
         id: user.id,
@@ -34,11 +33,25 @@ export async function generateToken(user: AdminUser): Promise<string> {
         .sign(secret)
 }
 
-export async function verifyToken(token: string): Promise<AdminUser | null> {
+type TokenPayload = {
+    id: number
+    email: string
+    name: string
+    role: string
+}
+
+export async function verifyToken(token: string): Promise<TokenPayload | null> {
     try {
         const { payload } = await jwtVerify(token, secret)
-        return payload as AdminUser
-    } catch {
+
+        return {
+            id: payload.id as number,
+            email: payload.email as string,
+            name: payload.name as string,
+            role: payload.role as string,
+        }
+    } catch (error) {
+        console.error("JWT verify error:", error)
         return null
     }
 }
@@ -46,9 +59,17 @@ export async function verifyToken(token: string): Promise<AdminUser | null> {
 export async function getAdminFromRequest(request: NextRequest): Promise<AdminUser | null> {
     const token = request.cookies.get("admin-token")?.value
     if (!token) return null
-    return await verifyToken(token)
-}
 
+    const payload = await verifyToken(token)
+    if (!payload) return null
+
+    return {
+        id: payload.id,
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+    }
+}
 export async function authenticateAdmin(email: string, password: string): Promise<AdminUser | null> {
     try {
         const result = await sql/* sql */`
