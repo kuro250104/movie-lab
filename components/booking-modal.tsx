@@ -32,7 +32,38 @@ interface BookingModalProps {
     }
 }
 
-export function NewBookingModal({ isOpen, onClose, selectedService }: BookingModalProps) {
+function normalizePhoneFR(raw: string): string {
+    if (!raw) return ""
+
+    // on garde seulement chiffres et +
+    let p = raw.replace(/[^0-9+]/g, "")
+
+    // déjà au bon format
+    if (p.startsWith("+33") && p.length >= 4) {
+        return p
+    }
+
+    // 0XXXXXXXXX -> +33XXXXXXXXX
+    if (p.startsWith("0") && p.length === 10) {
+        return "+33" + p.slice(1)
+    }
+
+    // 33XXXXXXXXX -> +33XXXXXXXXX
+    if (p.startsWith("33") && p.length === 11) {
+        return "+" + p
+    }
+
+    // dernier recours : si ça ressemble à un mobile FR sans 0
+    if (!p.startsWith("+") && p.length === 9) {
+        // ex: 772306348 -> +33772306348 (à adapter si tu veux plus strict)
+        return "+33" + p
+    }
+
+    // si on ne sait pas mieux faire, on renvoie tel quel
+    return p
+}
+
+export function BookingModal({ isOpen, onClose, selectedService }: BookingModalProps) {
     const [step, setStep] = useState<1 | 2 | 3>(1)
     const [loading, setLoading] = useState(false)
 
@@ -231,7 +262,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
     }
 
     const handleSubmit = async () => {
-        const required = ["firstName", "lastName", "email", "appointmentDate", "appointmentTime"] as const
+        const required = ["firstName", "lastName", "email", "phone", "appointmentDate", "appointmentTime"] as const
         const missing = required.filter((k) => !formData[k])
         if (missing.length) {
             alert("Veuillez remplir tous les champs obligatoires.")
@@ -248,6 +279,14 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
             return
         }
 
+        const phoneE164 = normalizePhoneFR(formData.phone)
+        if (!phoneE164.startsWith("+33")) {
+            // optionnel : tu peux forcer une validation stricte
+            console.warn("[BOOKING] téléphone non reconnu comme FR", { raw: formData.phone, phoneE164 })
+            alert("Le numéro de téléphone semble invalide.")
+            // return
+        }
+
         setLoading(true)
         try {
             const startsAt = buildStartsAtWithOffset(formData.appointmentDate, formData.appointmentTime)
@@ -257,7 +296,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
-                phone: formData.phone || null,
+                phone: phoneE164 || null,
                 serviceId: selectedService.id,
                 startsAt,
                 notes: (formData.notes?.trim() || "Pas de commentaire.") ,
@@ -303,7 +342,7 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
         }
     }
 
-    const canGoStep2 = !!(formData.firstName && formData.lastName && formData.email && formData.address)
+    const canGoStep2 = !!(formData.firstName && formData.lastName && formData.email && formData.phone && formData.address)
     const canGoStep3 = !!(formData.appointmentDate && formData.appointmentTime && isDateAllowed(formData.appointmentDate))
 
     return (
@@ -358,8 +397,8 @@ export function NewBookingModal({ isOpen, onClose, selectedService }: BookingMod
                                     <Input type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} required />
                                 </div>
                                 <div>
-                                    <Label className="flex items-center gap-2"><Phone className="w-4 h-4" />Téléphone</Label>
-                                    <Input value={formData.phone} onChange={e => handleInputChange("phone", e.target.value)} />
+                                    <Label className="flex items-center gap-2"><Phone className="w-4 h-4" />Téléphone *</Label>
+                                    <Input value={formData.phone} onChange={e => handleInputChange("phone", e.target.value)} required />
                                 </div>
                             </div>
 
