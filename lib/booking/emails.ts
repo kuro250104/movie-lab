@@ -1,4 +1,3 @@
-// lib/booking/emails.ts
 import { FR_TZ, escapeHtml, currencyEUR, type EmailSupplement } from "./utils"
 
 export function renderCustomerBookingEmail(opts: {
@@ -13,7 +12,7 @@ export function renderCustomerBookingEmail(opts: {
     serviceMessage?: string | null
 }) {
     const {
-        brand = "MoviLab",
+        brand = "movi-lab",
         fullName,
         serviceName,
         servicePrice,
@@ -44,24 +43,46 @@ export function renderCustomerBookingEmail(opts: {
 
     const supplementsList = supplements.length
         ? `
-      <ul style="margin:8px 0 0 0;padding-left:18px;color:#374151;font-size:14px;">
+      <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px;">
         ${supplements
             .map(
                 (s) =>
-                    `<li>${escapeHtml(s.name)} – ${currencyEUR(Number(s.price) || 0)}</li>`,
+                    `<li style="margin-bottom:4px;">${escapeHtml(s.name)} – ${currencyEUR(
+                        Number(s.price) || 0,
+                    )}</li>`,
             )
             .join("")}
       </ul>
     `
-        : `<p style="margin:8px 0 0 0;color:#6b7280;font-size:14px;">Aucun supplément sélectionné.</p>`
+        : `<p style="margin:0;color:#6b7280;font-size:14px;">Aucun supplément sélectionné.</p>`
+
+    const supplementsBlock = `
+      <div style="
+        margin-top:16px;
+        border-radius:10px;
+        border:1px solid #e5e7eb;
+        background:#f9fafb;
+        padding:10px 12px;
+        font-size:14px;
+        color:#374151;
+      ">
+        <div style="font-weight:600;color:#111827;margin-bottom:6px;">
+          Suppléments choisis
+        </div>
+        ${supplementsList}
+      </div>
+    `
 
     const notesBlock =
         notes && notes.trim()
             ? `
-      <div style="margin-top:12px;">
+      <div style="margin-top:16px;">
         <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">Votre message :</div>
         <div style="font-size:14px;line-height:1.6;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;">
-          ${escapeHtml(notes).replace(/\n/g, "<br/>")}
+          ${escapeHtml(notes)
+                .replace(/\r\n/g, "\n")
+                .replace(/\n{2,}/g, "<br/><br/>")
+                .replace(/\n/g, "<br/>")}
         </div>
       </div>
     `
@@ -69,16 +90,27 @@ export function renderCustomerBookingEmail(opts: {
 
     const serviceMessageBlock =
         serviceMessage && serviceMessage.trim()
-            ? `
-      <div style="margin-top:12px;">
-        <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">
-          Informations importantes pour ce service :
+            ? (() => {
+                const raw = serviceMessage.trim()
+                const messageHtml = `
+        <p style="margin:0 0 8px;line-height:1.6;">
+          ${escapeHtml(raw)
+                    .replace(/\r\n/g, "\n")
+                    .replace(/\n{2,}/g, "</p><p style='margin:0 0 8px;line-height:1.6;'>")
+                    .replace(/\n/g, "<br/>")}
+        </p>`
+
+                return `
+        <div style="margin-top:16px;">
+          <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">
+            Informations importantes pour ce service :
+          </div>
+          <div style="font-size:14px;line-height:1.6;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;">
+            ${messageHtml}
+          </div>
         </div>
-        <div style="font-size:14px;line-height:1.6;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;">
-          ${escapeHtml(serviceMessage)}
-        </div>
-      </div>
-    `
+      `
+            })()
             : ""
 
     return `
@@ -87,14 +119,16 @@ export function renderCustomerBookingEmail(opts: {
         <tr>
           <td align="center" style="padding:0 16px;">
             <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+              
+              <!-- Header -->
               <tr>
                 <td style="background:#111827;color:#fff;padding:18px 24px;">
-                  <div style="font-size:16px;font-weight:700;letter-spacing:.2px;">${escapeHtml(
-        brand,
-    )}</div>
+                  <div style="font-size:16px;font-weight:700;letter-spacing:.2px;">${escapeHtml(brand)}</div>
                   <div style="font-size:13px;opacity:.85;margin-top:2px;">Confirmation de votre demande de rendez-vous</div>
                 </td>
               </tr>
+              
+              <!-- Intro -->
               <tr>
                 <td style="padding:20px 24px 0;">
                   <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#374151;">
@@ -107,32 +141,26 @@ export function renderCustomerBookingEmail(opts: {
                   <p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:#374151;">
                     Voici le récapitulatif de votre demande :
                   </p>
-                  <div style="font-size:14px;line-height:1.6;color:#374151;margin-top:4px;">
-                    <div>Date & heure : <strong style="color:#111827;">${when}</strong></div>
+                  <div style="font-size:14px;line-height:1.6;color:#374151;margin:8px 0 0;">
+                    <div style="margin-bottom:4px;">Date &amp; heure : <strong style="color:#111827;">${when}</strong></div>
                     ${priceRow}
                     ${durationRow}
                   </div>
                 </td>
               </tr>
+
+              <!-- Suppléments + blocs -->
               <tr>
                 <td style="padding:16px 24px 0;">
-                  <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">
-                    Suppléments choisis :
-                  </div>
-                  ${supplementsList}
+                  ${supplementsBlock}
+                  ${notesBlock}
+                  ${serviceMessageBlock}
                 </td>
               </tr>
-               ${notesBlock ? `<tr><td style="padding:0 24px 0;">${notesBlock}</td></tr>` : ""}
-               ${
-        serviceMessageBlock
-            ? `<tr><td style="padding:0 24px 0;">${serviceMessageBlock}</td></tr>`
-            : ""
-    }
+              
+              <!-- Footer -->
               <tr>
-                <td style="padding:16px 24px 20px;">
-                  <p style="margin:0 0 8px;font-size:14px;line-height:1.6;color:#374151;">
-                    Votre créneau sera confirmé par un coach dès que possible. Vous recevrez un nouvel email de confirmation ou une proposition d&apos;horaire alternatif si nécessaire.
-                  </p>
+                <td style="padding:18px 24px 20px;">
                   <p style="margin:0;font-size:13px;line-height:1.6;color:#6b7280;">
                     Si vous n&apos;êtes pas à l&apos;origine de cette demande, vous pouvez ignorer cet email.
                   </p>
@@ -142,6 +170,7 @@ export function renderCustomerBookingEmail(opts: {
                   </p>
                 </td>
               </tr>
+
             </table>
           </td>
         </tr>
@@ -149,7 +178,6 @@ export function renderCustomerBookingEmail(opts: {
     </div>
   `
 }
-
 export function renderBookingEmail(opts: {
     brand?: string
     fullName: string
@@ -165,7 +193,7 @@ export function renderBookingEmail(opts: {
     supplements?: EmailSupplement[]
 }) {
     const {
-        brand = "MoviLab",
+        brand = "movi-lab",
         fullName,
         customerEmail,
         customerPhone,
