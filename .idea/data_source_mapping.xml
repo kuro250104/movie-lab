@@ -2,6 +2,7 @@
 <project version="4">
   <component name="DataSourcePerFileMappings">
     <file url="file://$PROJECT_DIR$/app/api/admin/services/route.ts" value="9e46ce44-6160-4d5b-9d4d-82837d27599a" />
+    <file url="file://$PROJECT_DIR$/app/api/public/booking/route.ts" value="9e46ce44-6160-4d5b-9d4d-82837d27599a" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/9e46ce44-6160-4d5b-9d4d-82837d27599a/console.sql" value="9e46ce44-6160-4d5b-9d4d-82837d27599a" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/9e46ce44-6160-4d5b-9d4d-82837d27599a/console_1.sql" value="9e46ce44-6160-4d5b-9d4d-82837d27599a" />
   </component>
