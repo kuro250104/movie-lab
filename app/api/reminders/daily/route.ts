@@ -50,12 +50,12 @@ export async function GET() {
             const body = [
                 `Bonjour ${fullName},`,
                 ``,
-                `Petit rappel : vous avez un rendez-vous MoviLab demain pour "${row.service_name}".`,
+                `Petit rappel : vous avez un rendez-vous movi-lab demain pour "${row.service_name}".`,
                 `Date & heure : ${whenFr}`,
                 ``,
-                `Si vous ne pouvez pas venir, merci de nous prévenir pour libérer le créneau.`,
+                `Si vous ne pouvez pas venir, merci de nous prévenir au +33 9 79 21 92 48 pour libérer le créneau.`,
                 ``,
-                `L'équipe MoviLab`,
+                `L'équipe movi-lab`,
             ].join("\n")
 
             await sendSms(phone, body)
