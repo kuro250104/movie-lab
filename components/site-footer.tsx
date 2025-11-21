@@ -32,7 +32,7 @@ export function SiteFooter() {
                                 <div className="p-2 bg-orange-500/20 rounded-lg">
                                     <MapPin className="w-4 h-4 text-orange-400"/>
                                 </div>
-                                <span>2 Rue Lieutenant Guy Dedieu, Toulouse 31400</span>
+                                <span>2 Rue Lieutenant Guy Dedieu, Toulouse 31300</span>
                             </div>
                             <div className="flex items-center gap-3 text-gray-300">
                                 <div className="p-2 bg-orange-500/20 rounded-lg">

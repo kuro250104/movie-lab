@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
                     d’évaluation.
                 </li>
                 <li>
-                    <strong>Échanges :</strong> emails, formulaires de contact, messages lors de prises de rendez-vous.
+                    <strong>Échanges :</strong> emails, formulaires de contact, messages lors de prises de rendez-vous, SMS de rappel.
                 </li>
                 <li>
                     <strong>Données de navigation :</strong> cookies, statistiques anonymisées de fréquentation.
