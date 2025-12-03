@@ -126,7 +126,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
     const RULES = {
         // 0=dim, 1=lun, ... 6=sam
         openingHours: {
-            5: [["14:00","17:00"]],
             6: [["09:00","12:00"]],
             0: [],
         } as Record<number, string[][]>,
