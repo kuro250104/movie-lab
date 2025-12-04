@@ -22,6 +22,8 @@ export function SiteHeader() {
                         <div className="relative h-12 w-12">
                             <Image src="/logo.svg" title="logo movilab" alt="Logo Movilab" fill className="object-contain"/>
                         </div>
+                        <span className="text-lg font-semibold uppercase relative group">movi-lab</span>
+
                     </Link>
                     <nav className="hidden md:flex gap-8 lg:gap-12">
                         <Link
