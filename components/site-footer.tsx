@@ -22,9 +22,7 @@ export function SiteFooter() {
                             </div>
                         </Link>
                         <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">
-                            Transformez vos défis en réussite avec notre analyse 3D de pointe. Démocratiser l'analyse du
-                            mouvement
-                            pour tous les sportifs.
+                            Transforme tes défis en réussite, progresse en toute sérénité
                         </p>
                         <div className="text-2xl font-bold text-orange-400 mb-6">ALL YOU NEED IS RUN</div>
                         <div className="space-y-3">
@@ -83,7 +81,7 @@ export function SiteFooter() {
                                 >
                                     <ArrowRight
                                         className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"/>
-                                    Nos ffres
+                                    Nos offres
                                 </Link>
                             </li>
                             <li>
