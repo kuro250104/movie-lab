@@ -21,9 +21,11 @@ export function SiteFooter() {
                                 <Image src="/logo.svg" title="logo movilab" alt="Logo Movilab" fill className="object-contain"/>
                             </div>
                         </Link>
-                        <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md">
-                            Transforme tes défis en réussite, progresse en toute sérénité
+                        <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-md whitespace-pre-line !block">
+                            {`Transforme tes défis en réussite,
+                            progresse en toute sérénité`}
                         </p>
+
                         <div className="text-2xl font-bold text-orange-400 mb-6">ALL YOU NEED IS RUN</div>
                         <div className="space-y-3">
                             <div className="flex items-center gap-3 text-gray-300">
