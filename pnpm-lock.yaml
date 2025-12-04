@@ -197,6 +197,9 @@ importers:
       sonner:
         specifier: ^1.7.4
         version: 1.7.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      stripe:
+        specifier: ^20.0.0
+        version: 20.0.0(@types/node@22.17.2)
       tailwind-merge:
         specifier: ^2.5.5
         version: 2.6.0
@@ -2519,6 +2522,15 @@ packages:
   streamsearch@1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
+
+  stripe@20.0.0:
+    resolution: {integrity: sha512-EaZeWpbJOCcDytdjKSwdrL5BxzbDGNueiCfHjHXlPdBQvLqoxl6AAivC35SPzTmVXJb5duXQlXFGS45H0+e6Gg==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   strnum@2.1.1:
     resolution: {integrity: sha512-7ZvoFTiCnGxBtDqJ//Cu6fWtZtc7Y3x+QOirG15wztbdngGSkht27o2pyGWrVy0b4WAy3jbKmnoK6g5VlVNUUw==}
@@ -5158,6 +5170,12 @@ snapshots:
   split2@4.2.0: {}
 
   streamsearch@1.1.0: {}
+
+  stripe@20.0.0(@types/node@22.17.2):
+    dependencies:
+      qs: 6.14.0
+    optionalDependencies:
+      '@types/node': 22.17.2
 
   strnum@2.1.1: {}
 

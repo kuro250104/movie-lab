@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,37 +35,30 @@ interface BookingModalProps {
 function normalizePhoneFR(raw: string): string {
     if (!raw) return ""
 
-    // on garde seulement chiffres et +
     let p = raw.replace(/[^0-9+]/g, "")
 
-    // déjà au bon format
     if (p.startsWith("+33") && p.length >= 4) {
         return p
     }
 
-    // 0XXXXXXXXX -> +33XXXXXXXXX
     if (p.startsWith("0") && p.length === 10) {
         return "+33" + p.slice(1)
     }
 
-    // 33XXXXXXXXX -> +33XXXXXXXXX
     if (p.startsWith("33") && p.length === 11) {
         return "+" + p
     }
 
-    // dernier recours : si ça ressemble à un mobile FR sans 0
     if (!p.startsWith("+") && p.length === 9) {
-        // ex: 772306348 -> +33772306348 (à adapter si tu veux plus strict)
         return "+33" + p
     }
 
-    // si on ne sait pas mieux faire, on renvoie tel quel
     return p
 }
 
 export function BookingModal({ isOpen, onClose, selectedService }: BookingModalProps) {
     const [step, setStep] = useState<1 | 2 | 3>(1)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false) // utilisé aussi pour le paiement
 
     const [formData, setFormData] = useState({
         // perso
@@ -99,11 +92,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
                 if (!cancelled) {
                     const normalized = (Array.isArray(rows) ? rows : [])
-                        .filter(s => s.is_active)
-                        .map(s => ({
+                        .filter((s) => s.is_active)
+                        .map((s) => ({
                             ...s,
-                            id: Number(s.id),           // <-- id en number
-                            price: Number(s.price) || 0 // <-- price en number
+                            id: Number(s.id),
+                            price: Number(s.price) || 0,
                         }))
                     setSupplements(normalized)
                 }
@@ -124,10 +117,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
     // ---------- RÈGLES OUVERTURE ----------
     const RULES = {
-        // 0=dim, 1=lun, ... 6=sam
+        // 0=dim, 1=lun
         openingHours: {
-            6: [["09:00","12:00"]],
-            0: [],
+            6: [["09:00", "13:00"]],
         } as Record<number, string[][]>,
         minLeadHours: 12,
         maxAdvanceDays: 60,
@@ -203,8 +195,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             setTakenSlots(new Set(taken))
             setSlots(all)
             // reset si slot plus dispo
-            if (formData.appointmentTime && (!all.includes(formData.appointmentTime) || taken.includes(formData.appointmentTime))) {
-                setFormData(prev => ({ ...prev, appointmentTime: "" }))
+            if (
+                formData.appointmentTime &&
+                (!all.includes(formData.appointmentTime) || taken.includes(formData.appointmentTime))
+            ) {
+                setFormData((prev) => ({ ...prev, appointmentTime: "" }))
             }
         } finally {
             setLoadingSlots(false)
@@ -224,18 +219,18 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
     const toggleSupplement = (id: SupplementId) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             selectedSupplements: prev.selectedSupplements.includes(id)
-                ? prev.selectedSupplements.filter(x => x !== id)
-                : [...prev.selectedSupplements, id]
+                ? prev.selectedSupplements.filter((x) => x !== id)
+                : [...prev.selectedSupplements, id],
         }))
     }
 
     const servicePrice = Number(selectedService.price) || 0
     const supplementsTotal = formData.selectedSupplements
-        .map(id => {
-            const s = supplements.find(x => x.id === id)
+        .map((id) => {
+            const s = supplements.find((x) => x.id === id)
             return Number(s?.price) || 0
         })
         .reduce((a, b) => a + b, 0)
@@ -250,7 +245,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             maximumFractionDigits: 2,
         }).format(Number.isFinite(n) ? n : 0)
 
-    // ---------- SUBMIT ----------
+    // ---------- SUBMIT + STRIPE ----------
     const buildStartsAtWithOffset = (date: string, time: string) => {
         const local = new Date(`${date}T${time}:00`)
         const offsetMin = -local.getTimezoneOffset()
@@ -280,9 +275,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
         const phoneE164 = normalizePhoneFR(formData.phone)
         if (!phoneE164.startsWith("+33")) {
-            // optionnel : tu peux forcer une validation stricte
             console.warn("[BOOKING] téléphone non reconnu comme FR", { raw: formData.phone, phoneE164 })
             alert("Le numéro de téléphone semble invalide.")
+            // si tu veux être strict, tu peux `return` ici
             // return
         }
 
@@ -290,49 +285,49 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         try {
             const startsAt = buildStartsAtWithOffset(formData.appointmentDate, formData.appointmentTime)
 
-
-            const payload = {
+            // 🔥 On ne crée PLUS la réservation ici
+            // On construit juste le payload qu'on ENVOIE à Stripe
+            const bookingPayload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 email: formData.email,
                 phone: phoneE164 || null,
                 serviceId: selectedService.id,
                 startsAt,
-                notes: (formData.notes?.trim() || "Pas de commentaire.") ,
+                notes: formData.notes?.trim() || "Pas de commentaire.",
                 supplementIds: formData.selectedSupplements,
             }
-            console.log("payload sent :",  payload)
 
-            const resp = await fetch("/api/public/booking", {
+            const stripeResp = await fetch("/api/payment/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({
+                    bookingPayload,          // 🔥 tout ce qu’on envoyait avant à /api/public/booking
+                    totalAmount: total,      // service + suppléments
+                    title: selectedService.name,
+                }),
             })
 
-            if (!resp.ok) {
-                let msg = "Erreur lors de l'envoi du formulaire"
-                try {
-                    const data = await resp.json()
-                    msg = data?.error ?? msg
-                } catch {}
-                throw new Error(msg)
+            if (!stripeResp.ok) {
+                console.error("Erreur Stripe checkout:", await stripeResp.text())
+                alert(
+                    "Une erreur est survenue lors du démarrage du paiement en ligne. Merci de réessayer dans quelques instants."
+                )
+                return
             }
 
-            alert("Votre réservation a bien été enregistrée !")
-            // reset
-            setFormData({
-                firstName: "",
-                lastName: "",
-                email: "",
-                phone: "",
-                address: "",
-                appointmentDate: "",
-                appointmentTime: "",
-                notes: "Pas de commentaire.",
-                selectedSupplements: [],
-            })
-            setStep(1)
-            onClose()
+            const stripeData = await stripeResp.json()
+
+            if (stripeData?.url) {
+                // 🔥 Redirection vers Stripe Checkout
+                window.location.href = stripeData.url
+                return
+            } else {
+                console.error("Pas d'URL Stripe retournée", stripeData)
+                alert(
+                    "Impossible de démarrer le paiement en ligne pour le moment. Merci de réessayer plus tard."
+                )
+            }
         } catch (e: any) {
             console.error(e)
             alert(e?.message || "Erreur lors de l’envoi du formulaire.")
@@ -341,8 +336,18 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         }
     }
 
-    const canGoStep2 = !!(formData.firstName && formData.lastName && formData.email && formData.phone && formData.address)
-    const canGoStep3 = !!(formData.appointmentDate && formData.appointmentTime && isDateAllowed(formData.appointmentDate))
+    const canGoStep2 = !!(
+        formData.firstName &&
+        formData.lastName &&
+        formData.email &&
+        formData.phone &&
+        formData.address
+    )
+    const canGoStep3 = !!(
+        formData.appointmentDate &&
+        formData.appointmentTime &&
+        isDateAllowed(formData.appointmentDate)
+    )
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -359,7 +364,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                         <div key={s} className="flex items-center">
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                    step >= (s as 1|2|3) ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-600"
+                                    step >= (s as 1 | 2 | 3) ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-600"
                                 }`}
                             >
                                 {step > s ? <Check className="w-4 h-4" /> : s}
@@ -381,43 +386,80 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                             <h3 className="text-xl font-semibold text-gray-900">Vos informations</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <Label className="flex items-center gap-2"><User className="w-4 h-4" />Prénom *</Label>
-                                    <Input value={formData.firstName} onChange={e => handleInputChange("firstName", e.target.value)} required />
+                                    <Label className="flex items-center gap-2">
+                                        <User className="w-4 h-4" />
+                                        Prénom *
+                                    </Label>
+                                    <Input
+                                        value={formData.firstName}
+                                        onChange={(e) => handleInputChange("firstName", e.target.value)}
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <Label>Nom *</Label>
-                                    <Input value={formData.lastName} onChange={e => handleInputChange("lastName", e.target.value)} required />
+                                    <Input
+                                        value={formData.lastName}
+                                        onChange={(e) => handleInputChange("lastName", e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <Label className="flex items-center gap-2"><Mail className="w-4 h-4" />Email *</Label>
-                                    <Input type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} required />
+                                    <Label className="flex items-center gap-2">
+                                        <Mail className="w-4 h-4" />
+                                        Email *
+                                    </Label>
+                                    <Input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => handleInputChange("email", e.target.value)}
+                                        required
+                                    />
                                 </div>
                                 <div>
-                                    <Label className="flex items-center gap-2"><Phone className="w-4 h-4" />Téléphone *</Label>
-                                    <Input value={formData.phone} onChange={e => handleInputChange("phone", e.target.value)} required />
+                                    <Label className="flex items-center gap-2">
+                                        <Phone className="w-4 h-4" />
+                                        Téléphone *
+                                    </Label>
+                                    <Input
+                                        value={formData.phone}
+                                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                                        required
+                                    />
                                 </div>
                             </div>
 
                             <div>
-                                <Label className="flex items-center gap-2"><MapPin className="w-4 h-4" />Adresse *</Label>
-                                <Input value={formData.address} onChange={e => handleInputChange("address", e.target.value)} required/>
+                                <Label className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    Adresse *
+                                </Label>
+                                <Input
+                                    value={formData.address}
+                                    onChange={(e) => handleInputChange("address", e.target.value)}
+                                    required
+                                />
                             </div>
 
                             <div>
                                 <Label>Notes (optionnel)</Label>
                                 <Textarea
                                     value={formData.notes}
-                                    onChange={e => handleInputChange("notes", e.target.value)}
+                                    onChange={(e) => handleInputChange("notes", e.target.value)}
                                     placeholder="Information supplémentaire…"
                                     className="min-h-[100px]"
                                 />
                             </div>
 
                             <div className="flex justify-end">
-                                <Button onClick={() => setStep(2)} disabled={!canGoStep2} className="bg-orange-600 hover:bg-orange-700">
+                                <Button
+                                    onClick={() => setStep(2)}
+                                    disabled={!canGoStep2}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                >
                                     Continuer <ChevronRight className="w-4 h-4 ml-2" />
                                 </Button>
                             </div>
@@ -475,10 +517,16 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                         }}
                                         min={new Date().toISOString().split("T")[0]}
                                         required
-                                        className={!formData.appointmentDate || isDateAllowed(formData.appointmentDate) ? "" : "border-red-500"}
+                                        className={
+                                            !formData.appointmentDate || isDateAllowed(formData.appointmentDate)
+                                                ? ""
+                                                : "border-red-500"
+                                        }
                                     />
                                     {formData.appointmentDate && !isDateAllowed(formData.appointmentDate) && (
-                                        <p className="text-xs text-red-600 mt-1">Date indisponible (jour fermé, délai mini ou trop lointain).</p>
+                                        <p className="text-xs text-red-600 mt-1">
+                                            Date indisponible (jour fermé, délai mini ou trop lointain).
+                                        </p>
                                     )}
                                 </div>
 
@@ -490,22 +538,22 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                         disabled={loadingSlots || slots.length === 0}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder={loadingSlots ? "Chargement..." : "Choisir un créneau"} />
+                                            <SelectValue
+                                                placeholder={loadingSlots ? "Chargement..." : "Choisir un créneau"}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {slots.map((time) => (
-                                                <SelectItem
-                                                    key={time}
-                                                    value={time}
-                                                    disabled={takenSlots.has(time)}
-                                                >
+                                                <SelectItem key={time} value={time} disabled={takenSlots.has(time)}>
                                                     {time}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {slots.length === 0 && !loadingSlots && (
-                                        <p className="text-sm text-gray-500 mt-1">Aucun créneau disponible pour cette date.</p>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Aucun créneau disponible pour cette date.
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -515,7 +563,9 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                             </div>
 
                             <div className="flex justify-between">
-                                <Button variant="outline" onClick={() => setStep(1)}>Retour</Button>
+                                <Button variant="outline" onClick={() => setStep(1)}>
+                                    Retour
+                                </Button>
                                 <Button
                                     onClick={() => setStep(3)}
                                     className="bg-orange-600 hover:bg-orange-700"
@@ -535,14 +585,18 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-6"
                         >
-                            <h3 className="text-xl font-semibold text-gray-900">Options supplémentaires (facultatif)</h3>
+                            <h3 className="text-xl font-semibold text-gray-900">
+                                Options supplémentaires (facultatif)
+                            </h3>
 
                             {suppsError && <p className="text-sm text-red-600">{suppsError}</p>}
                             {loadingSupps && <p className="text-sm text-gray-600">Chargement des options…</p>}
 
                             <div className="space-y-3">
-                                {(!loadingSupps && supplements.length === 0) ? (
-                                    <p className="text-sm text-gray-500">Aucun supplément proposé pour ce service.</p>
+                                {!loadingSupps && supplements.length === 0 ? (
+                                    <p className="text-sm text-gray-500">
+                                        Aucun supplément proposé pour ce service.
+                                    </p>
                                 ) : (
                                     supplements.map((s) => {
                                         const idNum = Number(s.id)
@@ -557,27 +611,28 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                                     "bg-white shadow-sm hover:shadow-md",
                                                     checked
                                                         ? "border-orange-300 ring-1 ring-orange-200 bg-orange-50"
-                                                        : "border-gray-200 hover:border-gray-300"
+                                                        : "border-gray-200 hover:border-gray-300",
                                                 ].join(" ")}
                                             >
-                                                {/* Accent à gauche quand coché */}
-                                                <span
-                                                    className={[
-                                                        "absolute left-0 top-0 h-full w-1 rounded-l-xl transition"
-                                                    ].join(" ")}
-                                                />
+                        <span
+                            className={[
+                                "absolute left-0 top-0 h-full w-1 rounded-l-xl transition",
+                            ].join(" ")}
+                        />
 
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="pr-2">
                                                         <div className="flex items-center gap-2">
-                                                            <span
-                                                                className={[
-                                                                    "inline-flex h-5 w-5 items-center justify-center rounded-full border text-white text-[11px]",
-                                                                    checked ? "bg-orange-600 border-orange-600" : "bg-gray-200 border-gray-300"
-                                                                ].join(" ")}
-                                                            >
-                  {checked ? "✓" : ""}
-                </span>
+                              <span
+                                  className={[
+                                      "inline-flex h-5 w-5 items-center justify-center rounded-full border text-white text-[11px]",
+                                      checked
+                                          ? "bg-orange-600 border-orange-600"
+                                          : "bg-gray-200 border-gray-300",
+                                  ].join(" ")}
+                              >
+                                {checked ? "✓" : ""}
+                              </span>
                                                             <span className="font-semibold text-gray-900">{s.name}</span>
                                                         </div>
                                                         {s.description && (
@@ -586,8 +641,8 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                                     </div>
 
                                                     <span className="shrink-0 rounded-full border px-3 py-1 text-sm font-medium text-orange-600 border-orange-200 bg-orange-50">
-              +{formatEUR(Number(s.price) || 0)}
-            </span>
+                            +{formatEUR(Number(s.price) || 0)}
+                          </span>
                                                 </div>
                                             </button>
                                         )
@@ -601,15 +656,19 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                             <div className="bg-gray-50 p-6 rounded-lg space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span>Service :</span>
-                                    <span className="font-medium">{selectedService.name} — {formatEUR(servicePrice)}</span>
+                                    <span className="font-medium">
+                    {selectedService.name} — {formatEUR(servicePrice)}
+                  </span>
                                 </div>
-                                {formData.selectedSupplements.map(id => {
-                                    const s = supplements.find(x => x.id === id)
+                                {formData.selectedSupplements.map((id) => {
+                                    const s = supplements.find((x) => x.id === id)
                                     if (!s) return null
                                     return (
                                         <div key={id} className="flex justify-between">
                                             <span>{s.name} :</span>
-                                            <span className="font-medium">+{formatEUR(Number(s.price) || 0)}</span>
+                                            <span className="font-medium">
+                        +{formatEUR(Number(s.price) || 0)}
+                      </span>
                                         </div>
                                     )
                                 })}
@@ -626,16 +685,32 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
 
                             {/* Mini récap infos/rdv */}
                             <div className="bg-gray-50 p-6 rounded-lg space-y-1">
-                                <div><strong>Nom :</strong> {formData.firstName} {formData.lastName}</div>
-                                <div><strong>Contact :</strong> {formData.email}{formData.phone ? ` • ${formData.phone}` : ""}</div>
-                                <div><strong>Date :</strong> {formData.appointmentDate} • <strong>Heure :</strong> {formData.appointmentTime}</div>
-                                <div><strong>Notes :</strong> {formData.notes || "Pas de commentaire."}</div>
+                                <div>
+                                    <strong>Nom :</strong> {formData.firstName} {formData.lastName}
+                                </div>
+                                <div>
+                                    <strong>Contact :</strong> {formData.email}
+                                    {formData.phone ? ` • ${formData.phone}` : ""}
+                                </div>
+                                <div>
+                                    <strong>Date :</strong> {formData.appointmentDate} •{" "}
+                                    <strong>Heure :</strong> {formData.appointmentTime}
+                                </div>
+                                <div>
+                                    <strong>Notes :</strong> {formData.notes || "Pas de commentaire."}
+                                </div>
                             </div>
 
                             <div className="flex justify-between">
-                                <Button variant="outline" onClick={() => setStep(2)}>Retour</Button>
-                                <Button onClick={handleSubmit} disabled={loading} className="bg-orange-600 hover:bg-orange-700">
-                                    {loading ? "Envoi..." : "Confirmer la réservation"}
+                                <Button variant="outline" onClick={() => setStep(2)}>
+                                    Retour
+                                </Button>
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                >
+                                    {loading ? "Redirection vers le paiement..." : "Confirmer et payer en ligne"}
                                 </Button>
                             </div>
                         </motion.div>

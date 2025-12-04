@@ -16,7 +16,7 @@ export async function getTransport() {
     const user = must("OVH_SMTP_USER", process.env.OVH_SMTP_USER)
     const pass = must("OVH_SMTP_PASS", process.env.OVH_SMTP_PASS)
 
-    console.log("[MAILER] Creating transporter", {
+    console.log("[MAILER] Creating transporter lalalala", {
         host,
         port,
         secure: port === 465,
@@ -29,6 +29,8 @@ export async function getTransport() {
         port,
         secure: port === 465,
         auth: { user, pass },
+        logger: true,
+        debug: true,
     })
 
     if (!verifiedOnce) {
