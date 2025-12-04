@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
     metadataBase: new URL("https://movi-lab.fr"),
-    title: "Movi-Lab — Analyse 3D de la course à Toulouse",
+    title: "movi-lab — Analyse 3D de la course à Toulouse",
     description:
         "Transforme tes défis en réussite : analyse biomécanique 3D de pointe à Toulouse pour progresser et prévenir les blessures.",
     alternates: {
@@ -33,17 +33,17 @@ export const metadata: Metadata = {
         type: "website",
         locale: "fr_FR",
         url: "/",
-        siteName: "Movi-Lab",
-        title: "Movi-Lab | Analyse 3D de la course à pied à Toulouse",
+        siteName: "movi-lab",
+        title: "movi-lab | Analyse 3D de la course à pied à Toulouse",
         description:
             "Analyse 3D, prévention des blessures et performance. Bilan biomécanique complet pour les coureurs.",
         images: [
-            { url: "/og-image.png", width: 1200, height: 630, alt: "Movi-Lab - Analyse 3D de la course" },
+            { url: "/og-image.png", width: 1200, height: 630, alt: "movi-lab - Analyse 3D de la course" },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Movi-Lab — Analyse 3D de la course",
+        title: "movi-lab — Analyse 3D de la course",
         description:
             "Analyse biomécanique 3D de pointe à Toulouse : progresse en toute sérénité.",
         images: ["/og-image.png"],
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
         shortcut: "/favicon.ico",
     },
     appleWebApp: {
-        title: "Movi-Lab",
+        title: "movi-lab",
         capable: true,
         statusBarStyle: "default",
     },
@@ -82,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const orgJsonLd = {
         "@context": "https://schema.org",
         "@type": "Organization",
-        name: "Movi-Lab",
+        name: "movi-lab",
         authoredBy: "kuro",
         url: "https://movi-lab.fr",
         logo: "https://movi-lab.fr/logo.svg",
@@ -109,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const localBusinessJsonLd = {
         "@context": "https://schema.org",
         "@type": "SportsActivityLocation",
-        name: "Movi-Lab",
+        name: "movi-lab",
         image: "https://movi-lab.fr/og-image.png",
         url: "https://movi-lab.fr",
         telephone: "+33 9 79 21 92 48",
