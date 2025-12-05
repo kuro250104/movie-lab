@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
     Users,
+    UserSearch,
     Calendar,
     Euro,
     TrendingUp,
@@ -93,10 +94,10 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">
-                                Dashboard Admin
+                                Dashboard admin
                             </h1>
                             <p className="text-gray-600">
-                                Bienvenue dans l&apos;administration movi-lab
+                                Bienvenue dans l'administration movi-lab
                                 {role === "coach" && " — mode coach (accès limité)"}
                             </p>
                         </div>
@@ -113,8 +114,6 @@ export default function AdminDashboard() {
             </header>
 
             <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Si tu veux réactiver les stats un jour */}
-                {/* ... */}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Gestion coach / comptes */}
@@ -138,7 +137,6 @@ export default function AdminDashboard() {
                                     </Button>
                                 </Link>
 
-                                {/* 🔒 Réservé aux admins : création de comptes */}
                                 {isAdmin && (
                                     <Link href="/admin/management">
                                         <Button className="bg-orange-600 hover:bg-orange-700">
@@ -148,7 +146,6 @@ export default function AdminDashboard() {
                                     </Link>
                                 )}
 
-                                {/* 🔒 Réservé aux admins : création de services */}
                                 {isAdmin && (
                                     <Link href="/admin/services/new">
                                         <Button className="bg-orange-600 hover:bg-orange-700">
@@ -183,6 +180,28 @@ export default function AdminDashboard() {
                             </div>
                         </CardContent>
                     </Card>
+                    {isAdmin && (
+                            <Card className="hover:shadow-lg transition-shadow">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <UserSearch className="w-5 h-5 text-orange-600" />
+                                        Client
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-gray-600 mb-4">
+                                        Afficher les clients inscrits sur le site.
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <Link href="/admin/clients">
+                                            <Button className="bg-orange-600 hover:bg-orange-700">
+                                                Voir les clients
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                    )}
                 </div>
             </div>
         </div>
