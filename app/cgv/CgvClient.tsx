@@ -8,7 +8,7 @@ export default function CgvClient() {
             label="Conditions Générales"
             title="Conditions Générales de Vente (CGV)"
             updatedAt="19/09/2025"
-            descContent="Applicable à partir du 19/09/2025. Les présentes Conditions Générales de Vente régissent les relations contractuelles entre Movi-Lab et ses clients, particuliers ou professionnels."
+            descContent="Applicable à partir du 19/09/2025. Les présentes Conditions Générales de Vente régissent les relations contractuelles entre movi-lab et ses clients, particuliers ou professionnels."
             icon={<FileText className="w-4 h-4" />}
         >
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Identification de la société</h2>
@@ -24,12 +24,12 @@ export default function CgvClient() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Objet</h2>
             <p>
                 Les présentes Conditions Générales de Vente (CGV) définissent les conditions contractuelles applicables à toute
-                commande passée auprès de Movi-Lab par un client consommateur ou professionnel (ci-après « le Client »),
-                concernant les services d’analyse biomécanique et vidéo proposés par Movi-Lab.
+                commande passée auprès de movi-lab par un client consommateur ou professionnel (ci-après « le Client »),
+                concernant les services d’analyse biomécanique et vidéo proposés par movi-lab.
             </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Services proposés</h2>
-            <p>Movi-Lab propose plusieurs formules de services, dont notamment :</p>
+            <p>movi-lab propose plusieurs formules de services, dont notamment :</p>
             <h3 className="text-2xl font-semibold mt-6 mb-2">Pack Prévention</h3>
             <ul className="list-disc pl-6 space-y-1">
                 <li>Analyse de la course</li>
@@ -49,7 +49,7 @@ export default function CgvClient() {
             </ul>
 
             <p className="mt-4">
-                Les prestations de Movi-Lab sont proposées à des tarifs compris entre 180 € et 280 € TTC selon la formule
+                Les prestations de movi-lab sont proposées à des tarifs compris entre 180 € et 280 € TTC selon la formule
                 choisie. Le prix exact est communiqué avant la réservation. Le règlement s’effectue par carte bancaire ou en
                 espèces, à l’issue de la séance. Aucun escompte pour paiement anticipé n’est accordé.
             </p>
@@ -89,22 +89,22 @@ export default function CgvClient() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Responsabilité</h2>
             <p>
-                Movi-Lab s’engage à fournir un service conforme aux règles de l’art. Les prestations ont une finalité d’analyse
-                et de conseil, et ne constituent pas un diagnostic médical. Movi-Lab ne pourra être tenu responsable des
+                movi-lab s’engage à fournir un service conforme aux règles de l’art. Les prestations ont une finalité d’analyse
+                et de conseil, et ne constituent pas un diagnostic médical. movi-lab ne pourra être tenu responsable des
                 blessures, incidents ou conséquences liées à la pratique sportive du Client. La responsabilité du Prestataire est
                 limitée, tous préjudices confondus, au montant payé pour la prestation concernée.
             </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Propriété intellectuelle</h2>
             <p>
-                Movi-Lab est propriétaire exclusif de tous les droits de propriété intellectuelle relatifs au Site et aux
+                movi-lab est propriétaire exclusif de tous les droits de propriété intellectuelle relatifs au Site et aux
                 Services. Le Client bénéficie d’un droit d’utilisation strictement personnel et non cessible. Toute reproduction,
                 diffusion ou exploitation sans autorisation est interdite.
             </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Données personnelles et vidéos</h2>
             <p>
-                Movi-Lab collecte et traite les données personnelles du Client conformément au RGPD. Les vidéos et données
+                movi-lab collecte et traite les données personnelles du Client conformément au RGPD. Les vidéos et données
                 biomécaniques sont conservées 5 ans. Toute utilisation à des fins scientifiques, pédagogiques ou promotionnelles
                 nécessite l’accord écrit du Client. Le Client dispose d’un droit d’accès, de rectification et de suppression de
                 ses données en contactant <a href="mailto:info@movi-lab.fr">info@movi-lab.fr</a>.
@@ -112,7 +112,7 @@ export default function CgvClient() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Force majeure</h2>
             <p>
-                Movi-Lab ne pourra être tenu responsable en cas d’inexécution ou de retard dû à un cas de force majeure au sens
+                movi-lab ne pourra être tenu responsable en cas d’inexécution ou de retard dû à un cas de force majeure au sens
                 de l’article 1218 du Code civil.
             </p>
 

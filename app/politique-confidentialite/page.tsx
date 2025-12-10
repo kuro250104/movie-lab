@@ -6,9 +6,9 @@ export default function PrivacyPolicyPage() {
     return (
         <LegalLayout
             label="Protection des données"
-            title="Politique de confidentialité (RGPD) – Movi-Lab"
+            title="Politique de confidentialité (RGPD) – movi-lab"
             updatedAt="19/09/2025"
-            descContent="Chez Movi-Lab, la protection de vos données personnelles est une priorité. Cette politique explique de façon transparente comment nous collectons, utilisons et protégeons vos données, ainsi que vos droits."
+            descContent="Chez movi-lab, la protection de vos données personnelles est une priorité. Cette politique explique de façon transparente comment nous collectons, utilisons et protégeons vos données, ainsi que vos droits."
             icon={<ShieldCheck className="w-4 h-4" />}
         >
             <h2 className="text-3xl font-bold text-gray-900 mb-4">1. Introduction</h2>
@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">2. Responsable du traitement</h2>
             <p>
-                <strong>Movi-Lab – SASU</strong>
+                <strong>movi-lab – SASU</strong>
                 <br />
                 2 rue du Lieutenant Guy Dedieu, 31300 Toulouse
                 <br />
@@ -80,7 +80,7 @@ export default function PrivacyPolicyPage() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">7. Destinataires des données</h2>
             <p>
-                Vos données sont destinées exclusivement à Movi-Lab et, le cas échéant, à nos prestataires techniques de confiance
+                Vos données sont destinées exclusivement à movi-lab et, le cas échéant, à nos prestataires techniques de confiance
                 (hébergeur, outils de réservation, solution de paiement) ou, avec votre accord préalable, à nos partenaires
                 d’accompagnement dans le cadre du coaching (données d’identification et bilans). Nous ne revendons jamais vos
                 données à des tiers.
@@ -111,7 +111,7 @@ export default function PrivacyPolicyPage() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">10. Cookies</h2>
             <p>
-                Le site Movi-Lab utilise des cookies nécessaires à son bon fonctionnement et des cookies statistiques pour
+                Le site movi-lab utilise des cookies nécessaires à son bon fonctionnement et des cookies statistiques pour
                 améliorer l’expérience utilisateur. Vous pouvez gérer vos préférences via les paramètres de votre navigateur ou
                 via le bandeau de consentement affiché lors de votre première visite.
             </p>
