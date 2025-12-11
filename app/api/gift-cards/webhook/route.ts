@@ -5,11 +5,6 @@ import { sql } from "@/lib/db"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 apiVersion: "2025-11-17.clover",})
 
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-}
 
 async function buffer(readable: ReadableStream<Uint8Array>) {
     const chunks: Uint8Array[] = []
