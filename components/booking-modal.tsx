@@ -9,7 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, Euro, User, MapPin, Mail, Phone, Check, ChevronRight } from "lucide-react"
+import {
+    Calendar,
+    Clock,
+    Euro,
+    User,
+    MapPin,
+    Mail,
+    Phone,
+    Check,
+    ChevronRight,
+    Ticket,
+} from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 type Supplement = {
@@ -58,8 +69,7 @@ function normalizePhoneFR(raw: string): string {
 
 export function BookingModal({ isOpen, onClose, selectedService }: BookingModalProps) {
     const [step, setStep] = useState<1 | 2 | 3>(1)
-    const [loading, setLoading] = useState(false) // utilisé aussi pour le paiement
-
+    const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         // perso
         firstName: "",
@@ -115,9 +125,7 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         }
     }, [selectedService.id])
 
-    // ---------- RÈGLES OUVERTURE ----------
     const RULES = {
-        // 0=dim, 1=lun
         openingHours: {
             6: [["09:00", "13:00"]],
         } as Record<number, string[][]>,
@@ -127,7 +135,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         blackoutDates: new Set<string>([]),
     }
 
-    // ---------- HELPERS TEMPS ----------
     const toMinutes = (hhmm: string) => {
         const [h, m] = hhmm.split(":").map(Number)
         return h * 60 + (m || 0)
@@ -194,7 +201,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             } catch {}
             setTakenSlots(new Set(taken))
             setSlots(all)
-            // reset si slot plus dispo
             if (
                 formData.appointmentTime &&
                 (!all.includes(formData.appointmentTime) || taken.includes(formData.appointmentTime))
@@ -206,15 +212,12 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         }
     }
 
-    // (Optional) reload slots if service changes while a date is selected
     useEffect(() => {
         if (formData.appointmentDate) {
             refreshSlots(formData.appointmentDate)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedService.id, selectedService.duration_minutes])
 
-    // ---------- FORM HELPERS ----------
     const handleInputChange = (field: keyof typeof formData, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }))
     }
@@ -235,7 +238,14 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         })
         .reduce((a, b) => a + b, 0)
 
-    const total = servicePrice + supplementsTotal
+    const [giftCode, setGiftCode] = useState("")
+    const [giftChecking, setGiftChecking] = useState(false)
+    const [giftMessage, setGiftMessage] = useState<string | null>(null)
+    const [giftStatus, setGiftStatus] = useState<"idle" | "valid" | "invalid" | "error">("idle")
+    const [discountAmount, setDiscountAmount] = useState(0)
+
+    const totalBeforeDiscount = servicePrice + supplementsTotal
+    const total = Math.max(0, totalBeforeDiscount - discountAmount)
 
     const formatEUR = (n: number) =>
         new Intl.NumberFormat("fr-FR", {
@@ -245,7 +255,6 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             maximumFractionDigits: 2,
         }).format(Number.isFinite(n) ? n : 0)
 
-    // ---------- SUBMIT + STRIPE ----------
     const buildStartsAtWithOffset = (date: string, time: string) => {
         const local = new Date(`${date}T${time}:00`)
         const offsetMin = -local.getTimezoneOffset()
@@ -253,6 +262,64 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         const hh = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, "0")
         const mm = String(Math.abs(offsetMin) % 60).padStart(2, "0")
         return `${date}T${time}:00${sign}${hh}:${mm}`
+    }
+
+    const handleCheckGiftCode = async () => {
+        const code = giftCode.trim().toUpperCase()
+        if (!code) {
+            setGiftMessage("Merci de renseigner un code.")
+            setGiftStatus("error")
+            setDiscountAmount(0)
+            return
+        }
+
+        setGiftChecking(true)
+        setGiftMessage(null)
+        setGiftStatus("idle")
+
+        try {
+            const res = await fetch("/api/gift-cards/validate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    code,
+                    totalAmount: totalBeforeDiscount,
+                }),
+            })
+
+            if (!res.ok) {
+                const txt = await res.text()
+                console.error("Erreur validation réduction:", txt)
+                setGiftMessage("Impossible de vérifier ce code pour le moment.")
+                setGiftStatus("error")
+                setDiscountAmount(0)
+                return
+            }
+
+            const data = await res.json()
+            if (!data.valid) {
+                setGiftMessage(data.message || "Ce code n'est pas valide ou plus utilisable.")
+                setGiftStatus("invalid")
+                setDiscountAmount(0)
+                return
+            }
+
+            const discount = Number(data.discountAmount || 0)
+            setDiscountAmount(discount)
+            setGiftMessage(
+                discount > 0
+                    ? `Code valide. Réduction appliquée : ${formatEUR(discount)}.`
+                    : "Code valide."
+            )
+            setGiftStatus("valid")
+        } catch (e) {
+            console.error(e)
+            setGiftMessage("Erreur réseau lors de la vérification du code.")
+            setGiftStatus("error")
+            setDiscountAmount(0)
+        } finally {
+            setGiftChecking(false)
+        }
     }
 
     const handleSubmit = async () => {
@@ -277,16 +344,17 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
         if (!phoneE164.startsWith("+33")) {
             console.warn("[BOOKING] téléphone non reconnu comme FR", { raw: formData.phone, phoneE164 })
             alert("Le numéro de téléphone semble invalide.")
-            // si tu veux être strict, tu peux `return` ici
-            // return
+        }
+
+        if (total <= 0) {
+            alert("Votre carte cadeau couvre déjà 100% du montant, le flux sans paiement n'est pas encore implémenté.")
+            return
         }
 
         setLoading(true)
         try {
             const startsAt = buildStartsAtWithOffset(formData.appointmentDate, formData.appointmentTime)
 
-            // 🔥 On ne crée PLUS la réservation ici
-            // On construit juste le payload qu'on ENVOIE à Stripe
             const bookingPayload = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
@@ -296,15 +364,19 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                 startsAt,
                 notes: formData.notes?.trim() || "Pas de commentaire.",
                 supplementIds: formData.selectedSupplements,
+                giftCode: giftCode.trim() || null,
+                giftDiscount: discountAmount || 0,
             }
 
             const stripeResp = await fetch("/api/payment/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    bookingPayload,          // 🔥 tout ce qu’on envoyait avant à /api/public/booking
-                    totalAmount: total,      // service + suppléments
+                    bookingPayload,
+                    totalAmount: total, //apres reduc
                     title: selectedService.name,
+                    giftCode: giftCode.trim() || null,
+                    discountAmount: discountAmount //€€
                 }),
             })
 
@@ -319,14 +391,11 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
             const stripeData = await stripeResp.json()
 
             if (stripeData?.url) {
-                // 🔥 Redirection vers Stripe Checkout
                 window.location.href = stripeData.url
                 return
             } else {
                 console.error("Pas d'URL Stripe retournée", stripeData)
-                alert(
-                    "Impossible de démarrer le paiement en ligne pour le moment. Merci de réessayer plus tard."
-                )
+                alert("Impossible de démarrer le paiement en ligne pour le moment. Merci de réessayer plus tard.")
             }
         } catch (e: any) {
             console.error(e)
@@ -650,6 +719,43 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                 )}
                             </div>
 
+                            {/* Champ code cadeau / réduction */}
+                            <div className="mt-4 space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <Ticket className="w-4 h-4 text-orange-600" />
+                                    Carte cadeau / code de réduction
+                                </Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={giftCode}
+                                        onChange={(e) => setGiftCode(e.target.value)}
+                                        placeholder="Ex : MOVI-ABCD-1234"
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleCheckGiftCode}
+                                        disabled={giftChecking || !giftCode.trim()}
+                                        className="bg-orange-600 hover:bg-orange-700"
+                                    >
+                                        {giftChecking ? "Vérification..." : "Vérifier"}
+                                    </Button>
+                                </div>
+                                {giftMessage && (
+                                    <p
+                                        className={
+                                            giftStatus === "valid"
+                                                ? "text-xs text-emerald-600"
+                                                : giftStatus === "invalid" || giftStatus === "error"
+                                                    ? "text-xs text-red-600"
+                                                    : "text-xs text-gray-500"
+                                        }
+                                    >
+                                        {giftMessage}
+                                    </p>
+                                )}
+                            </div>
+
                             <Separator />
 
                             {/* Récapitulatif */}
@@ -672,14 +778,30 @@ export function BookingModal({ isOpen, onClose, selectedService }: BookingModalP
                                         </div>
                                     )
                                 })}
+
                                 <Separator />
+
+                                <div className="flex justify-between">
+                                    <span>Total avant réduction :</span>
+                                    <span className="font-semibold">{formatEUR(totalBeforeDiscount)}</span>
+                                </div>
+
+                                {discountAmount > 0 && (
+                                    <div className="flex justify-between text-emerald-700 font-semibold">
+                                        <span>Réduction appliquée :</span>
+                                        <span>-{formatEUR(discountAmount)}</span>
+                                    </div>
+                                )}
+
+                                <Separator />
+
                                 <div className="flex justify-between text-lg font-bold text-orange-600">
-                                    <span>Total estimé :</span>
+                                    <span>Total à payer :</span>
                                     <span>{formatEUR(total)}</span>
                                 </div>
 
                                 <div className="pt-2 text-xs text-gray-500">
-                                    * Le total inclura les options choisies, mentionnées dans vos notes pour le coach.
+                                    * Le total inclura les options choisies et la réduction éventuelle, le tout indiqué au coach.
                                 </div>
                             </div>
 
