@@ -13,6 +13,7 @@ import { ExpertiseCarousel } from "@/components/expertise-carousel"
 import { useOffers } from "@/hooks/use-offers"
 import { LoadingPage } from "@/components/loading-spinner"
 import { BookingModal } from "@/components/booking-modal"
+import Snow from "@/components/snow-effect";
 
 const items = [
     "Analyse posturale",
@@ -100,6 +101,8 @@ export default function Home() {
     return (
         <main className="flex min-h-screen flex-col text-white">
             {/* HERO */}
+            <Snow />
+
             <section className="relative w-full min-h-[70svh] md:min-h-[80svh] overflow-hidden">
                 <video
                     autoPlay
@@ -107,7 +110,7 @@ export default function Home() {
                     muted
                     playsInline
                     preload="none"
-                    poster="/hero-poster.jpg"
+                    poster="/hero-poster.png"
                     className="absolute inset-0 w-full h-full object-cover object-center"
                 >
                     <source src="/0827.mp4" type="video/mp4" />
@@ -160,7 +163,7 @@ export default function Home() {
             <section
                 className="relative py-24 overflow-hidden"
                 style={{ backgroundImage: "url('/image2site.jpeg')", backgroundSize: "cover", backgroundPosition: "center" }}
-                aria-label="Expertises Movi-Lab"
+                aria-label="Expertises movi-lab"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/80" />
                 <motion.div
@@ -395,7 +398,7 @@ export default function Home() {
                 </motion.div>
             </section>
 
-            {/* Booking modal */}
+            {/* Booking  */}
             {selectedService && (
                 <BookingModal
                     isOpen={isBookingModalOpen}
@@ -407,7 +410,6 @@ export default function Home() {
                 />
             )}
 
-            {/* FAQ JSON-LD */}
             <Script
                 id="ld-faq-home"
                 type="application/ld+json"
