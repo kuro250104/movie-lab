@@ -31,6 +31,8 @@ async function getGiftCardOffers(): Promise<GiftCardOffer[]> {
 
         if (typeof product === "string" || !price.unit_amount) continue
 
+        console.log("[GIFT_PAGE] check product", product.id, product.metadata)
+
         if ((product.metadata as any)?.type !== "gift_card") continue
 
         offers.push({
