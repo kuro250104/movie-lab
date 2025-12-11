@@ -12,7 +12,7 @@ export const metadata: Metadata = {
         title: "Contact",
         description: "Contact page",
         url: "https://movi-lab.fr/contact",
-        siteName: "Movi-Lab",
+        siteName: "movi-lab",
     }
 }
 export default function ContactPage() {

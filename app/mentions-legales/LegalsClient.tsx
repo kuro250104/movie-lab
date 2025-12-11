@@ -7,14 +7,14 @@ export default function MentionsLegalesClient() {
     return (
         <LegalLayout
             label="Mentions légales"
-            title="Mentions légales – Movi-Lab"
+            title="Mentions légales – movi-lab"
             updatedAt="19/09/2025"
-            descContent="Ces mentions légales définissent les informations relatives à l’édition, l’hébergement et l’utilisation du site Movi-Lab."
+            descContent="Ces mentions légales définissent les informations relatives à l’édition, l’hébergement et l’utilisation du site movi-lab."
             icon={<Globe className="w-4 h-4" />}
         >
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Éditeur du site</h2>
             <ul className="list-disc pl-6 space-y-2">
-                <li>Société : Movi-Lab</li>
+                <li>Société : movi-lab</li>
                 <li>Forme juridique : SASU (société par actions simplifiée unipersonnelle)</li>
                 <li>Capital social : 500 euros</li>
                 <li>Siège social : 2 rue du Lieutenant Guy Dedieu, 31300 Toulouse</li>
@@ -29,7 +29,7 @@ export default function MentionsLegalesClient() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Hébergement du site</h2>
             <p>
-                Le site Movi-Lab est hébergé par :
+                Le site movi-lab est hébergé par :
                 <br />
                 <strong>Vercel</strong>
                 <br />
@@ -40,14 +40,14 @@ export default function MentionsLegalesClient() {
             <p>
                 L’ensemble des contenus présents sur le site (textes, images, vidéos, graphismes, logos, icônes, sons,
                 logiciels, etc.) est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive de
-                Movi-Lab ou de ses partenaires. Toute reproduction, représentation, modification, publication, transmission,
+                movi-lab ou de ses partenaires. Toute reproduction, représentation, modification, publication, transmission,
                 adaptation totale ou partielle est interdite sans autorisation écrite préalable.
             </p>
             <p>L’utilisateur dispose d’un droit d’usage strictement personnel pour consulter le site.</p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Données personnelles</h2>
             <p>
-                Movi-Lab collecte et traite les données personnelles conformément à sa Politique de confidentialité (RGPD).
+                movi-lab collecte et traite les données personnelles conformément à sa Politique de confidentialité (RGPD).
                 Les utilisateurs disposent de droits d’accès, de rectification et de suppression, exercés via
                 <a href="mailto:info@movi-lab.fr"> info@movi-lab.fr</a>.
                 Plus de détails sont disponibles dans la Politique de confidentialité accessible sur le site.
@@ -55,16 +55,16 @@ export default function MentionsLegalesClient() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Limitation de responsabilité</h2>
             <p>
-                Movi-Lab s’efforce de fournir des informations fiables et à jour, mais ne garantit pas l’exactitude ou
-                l’exhaustivité. Movi-Lab ne peut être tenu responsable des dommages directs ou indirects liés à l’utilisation du
+                movi-lab s’efforce de fournir des informations fiables et à jour, mais ne garantit pas l’exactitude ou
+                l’exhaustivité. movi-lab ne peut être tenu responsable des dommages directs ou indirects liés à l’utilisation du
                 site. L’utilisateur reconnaît utiliser le site sous sa responsabilité exclusive.
             </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Liens hypertextes</h2>
             <p>
-                Le site peut contenir des liens vers des sites tiers. Movi-Lab ne contrôle pas leur contenu et décline toute
+                Le site peut contenir des liens vers des sites tiers. movi-lab ne contrôle pas leur contenu et décline toute
                 responsabilité quant à leur accessibilité ou leurs services. La création de liens vers ce site est soumise à
-                autorisation préalable écrite de Movi-Lab.
+                autorisation préalable écrite de movi-lab.
             </p>
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Cookies et traceurs</h2>
@@ -85,7 +85,7 @@ export default function MentionsLegalesClient() {
 
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Modification du site et des mentions légales</h2>
             <p>
-                Movi-Lab se réserve le droit de modifier, suspendre ou supprimer tout ou partie du site et de ses contenus, à
+                movi-lab se réserve le droit de modifier, suspendre ou supprimer tout ou partie du site et de ses contenus, à
                 tout moment et sans préavis. Les présentes mentions légales peuvent également être mises à jour. L’utilisateur
                 est invité à consulter régulièrement cette page.
             </p>

@@ -13,6 +13,7 @@ import { ExpertiseCarousel } from "@/components/expertise-carousel"
 import { useOffers } from "@/hooks/use-offers"
 import { LoadingPage } from "@/components/loading-spinner"
 import { BookingModal } from "@/components/booking-modal"
+import Snow from "@/components/snow-effect";
 
 const items = [
     "Analyse posturale",
@@ -100,6 +101,8 @@ export default function Home() {
     return (
         <main className="flex min-h-screen flex-col text-white">
             {/* HERO */}
+            <Snow />
+
             <section className="relative w-full min-h-[70svh] md:min-h-[80svh] overflow-hidden">
                 <video
                     autoPlay
@@ -107,7 +110,7 @@ export default function Home() {
                     muted
                     playsInline
                     preload="none"
-                    poster="/hero-poster.jpg"
+                    poster="/hero-poster.png"
                     className="absolute inset-0 w-full h-full object-cover object-center"
                 >
                     <source src="/0827.mp4" type="video/mp4" />
@@ -160,7 +163,7 @@ export default function Home() {
             <section
                 className="relative py-24 overflow-hidden"
                 style={{ backgroundImage: "url('/image2site.jpeg')", backgroundSize: "cover", backgroundPosition: "center" }}
-                aria-label="Expertises Movi-Lab"
+                aria-label="Expertises movi-lab"
             >
                 <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/80" />
                 <motion.div
@@ -252,6 +255,48 @@ export default function Home() {
                         </div>
                     )}
                 </div>
+            </section>
+
+            {/* Cartes cadeaux */}
+            <section className="relative py-12 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 text-white">
+                <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-soft-light bg-[radial-gradient(circle_at_top,_#ffffff40,_transparent_60%),radial-gradient(circle_at_bottom,_#00000060,_transparent_60%)]" />
+
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="relative px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6"
+                >
+                    <div className="text-center md:text-left space-y-2">
+                        <p className="text-xs uppercase tracking-[0.25em] font-semibold text-orange-100/80">
+                            offrir movi-lab
+                        </p>
+                        <h3 className="text-3xl md:text-4xl font-extrabold">
+                            Offrez une carte cadeau à un proche
+                        </h3>
+                        <p className="text-sm md:text-base text-orange-50/90 max-w-xl mt-2">
+                            Parfait pour un anniversaire, une préparation de course ou pour prendre soin d'un runner.
+                            Vous choisissez le montant, la personne choisit la séance.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <Link href="/gift-card" className="w-full sm:w-auto" prefetch={false}>
+                            <Button
+                                className="w-full sm:w-auto bg-white text-orange-700 hover:bg-orange-50 font-semibold px-6 py-3 rounded-full shadow-xl text-sm md:text-base"
+                                aria-label="Acheter une carte cadeau movi-lab"
+                            >
+                                Acheter une carte cadeau
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                        </Link>
+
+                        <p className="text-xs text-orange-100/80">
+                            Carte envoyée par e-mail • Valable 12 mois
+                        </p>
+                    </div>
+                </motion.div>
             </section>
 
             <section className="py-24 bg-gradient-to-br from-white to-gray-50 text-black">
@@ -353,7 +398,7 @@ export default function Home() {
                 </motion.div>
             </section>
 
-            {/* Booking modal */}
+            {/* Booking  */}
             {selectedService && (
                 <BookingModal
                     isOpen={isBookingModalOpen}
@@ -365,7 +410,6 @@ export default function Home() {
                 />
             )}
 
-            {/* FAQ JSON-LD */}
             <Script
                 id="ld-faq-home"
                 type="application/ld+json"

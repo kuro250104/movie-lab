@@ -4,6 +4,7 @@
     <file url="file://$PROJECT_DIR$/movilab.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/scripts/001-init-database.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/scripts/base_test/movilab_export.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/scripts/gifts_cards/gift-card.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/scripts/movilab_schema_migration.sql" dialect="GenericSQL" />
   </component>
 </project>

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Champs requis manquants." }, { status: 400 })
         }
 
-        const subject = `Contact Movi-Lab — ${firstName} ${lastName}`
+        const subject = `Contact movi-lab — ${firstName} ${lastName}`
 
         const html = `
       <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;line-height:1.5">

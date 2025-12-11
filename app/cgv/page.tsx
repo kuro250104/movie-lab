@@ -3,15 +3,15 @@ import CgvClient from "@/app/cgv/CgvClient";
 
 export const metadata: Metadata = {
     title: "Conditions Générales de Vente",
-    description: "Consultez nos conditions générales de vente : modalités de réservation, paiement et annulation pour les services Movi-Lab.",
+    description: "Consultez nos conditions générales de vente : modalités de réservation, paiement et annulation pour les services movi-lab.",
     alternates: {
     canonical: "https://movi-lab.fr/cgv",
     },
     openGraph: {
         title: "Condition Générales de Vente",
-        description: "Consultez nos conditions générales de vente : modalités de réservation, paiement et annulation pour les services Movi-Lab.",
+        description: "Consultez nos conditions générales de vente : modalités de réservation, paiement et annulation pour les services movi-lab.",
         url: "https://movi-lab.fr/cgv",
-        siteName: "Movi-Lab",
+        siteName: "movi-lab",
     }
 }
 export default function CgvPage() {
