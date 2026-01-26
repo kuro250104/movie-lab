@@ -1,25 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { sql } from "@/lib/db"
 
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-apiVersion: "2025-11-17.clover",})
-
-export const config = {
-    api: {
-        bodyParser: false,
-    },
-}
-
-async function buffer(readable: ReadableStream<Uint8Array>) {
-    const chunks: Uint8Array[] = []
-    const reader = readable.getReader()
-    let done, value
-    while ((({ done, value } = await reader.read()), !done)) {
-        chunks.push(value!)
-    }
-    return Buffer.concat(chunks)
-}
+    apiVersion: "2025-11-17.clover",
+})
 
 function generateGiftCode(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -28,17 +17,18 @@ function generateGiftCode(): string {
     return `MOVI-${part()}-${part()}`
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
     console.log("[WEBHOOK] Hit")
 
     const sig = req.headers.get("stripe-signature") ?? ""
-
     let event: Stripe.Event
 
     try {
-        const buf = await buffer(req.body as any)
+        // ✅ App Router: raw body via req.text() (ou arrayBuffer)
+        const rawBody = await req.text()
+
         event = stripe.webhooks.constructEvent(
-            buf,
+            rawBody,
             sig,
             process.env.STRIPE_WEBHOOK_SECRET as string,
         )
@@ -62,7 +52,7 @@ export async function POST(req: NextRequest) {
                     session.metadata?.buyer_email || session.customer_details?.email || null
                 const recipientEmail = session.metadata?.recipient_email || buyerEmail
 
-                const amountTotal = session.amount_total ?? 0 // en cents
+                const amountTotal = session.amount_total ?? 0 // cents
                 const currency = session.currency ?? "eur"
 
                 const code = generateGiftCode()
@@ -79,38 +69,34 @@ export async function POST(req: NextRequest) {
                 )
 
                 await sql/*sql*/ `
-          INSERT INTO gift_cards (
-            code,
-            amount_cents,
-            remaining_cents,
-            currency,
-            status,
-            buyer_email,
-            recipient_email,
-            stripe_payment_intent_id,
-            stripe_session_id
-          ) VALUES (
-            ${code},
-            ${amountTotal},
-            ${amountTotal},
-            ${currency},
-            'active',
-            ${buyerEmail},
-            ${recipientEmail},
-            ${session.payment_intent?.toString() ?? null},
-            ${session.id}
-          );
-        `
-
-                // TODO: envoyer un mail avec le code + montant
-                // await sendGiftCardEmail({ to: recipientEmail, code, amountCents: amountTotal })
+                    INSERT INTO gift_cards (
+                        code,
+                        amount_cents,
+                        remaining_cents,
+                        currency,
+                        status,
+                        buyer_email,
+                        recipient_email,
+                        stripe_payment_intent_id,
+                        stripe_session_id
+                    ) VALUES (
+                                 ${code},
+                                 ${amountTotal},
+                                 ${amountTotal},
+                                 ${currency},
+                                 'active',
+                                 ${buyerEmail},
+                                 ${recipientEmail},
+                                 ${session.payment_intent?.toString() ?? null},
+                                 ${session.id}
+                             );
+                `
 
                 console.log("[WEBHOOK] ✅ Gift card créée avec succès")
             } else {
                 console.log("[WEBHOOK] checkout.session.completed non gift_card, ignoré pour l'instant")
             }
         } else {
-            // Les autres events, on log juste pour debug
             console.log("[WEBHOOK] Event Stripe non géré:", event.type)
         }
 

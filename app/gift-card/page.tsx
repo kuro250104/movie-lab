@@ -55,16 +55,14 @@ export default async function GiftCardsPage() {
         <main className="relative min-h-screen bg-gradient-to-b from-[#1a1d24] via-[#0d0f12] to-[#08090b] text-white overflow-hidden">
 
 
-            {/* ❄️ Décor lumineux */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),transparent_70%),radial-gradient(circle_at_bottom,_rgba(255,0,0,0.10),transparent_70%)]" />
 
-            <Snow />
             <section className="relative py-20 px-6">
                 <div className="relative max-w-5xl mx-auto">
 
                     <div className="text-center mb-12">
 
-                        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-red-300 to-green-300 text-transparent bg-clip-text drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r text-white text-transparent bg-clip-text drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                             Cartes cadeaux movi-lab
                         </h1>
 
