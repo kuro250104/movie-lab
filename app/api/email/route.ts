@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         const body = BodySchema.parse(json);
 
         const { data, error } = await resend.emails.send({
-            from: process.env.EMAIL_FROM!,
+            from: process.env.MAIL_FROM!,
             to: body.to,
             subject: `Nouvelle réservation • ${body.serviceName}`,
             react: BookingEmail({
